@@ -10,27 +10,28 @@ mkdir artifacts
 set -e
 
 # Build binaries and sign them.
-for arch in amd64 arm64; do
-	for os in darwin linux windows freebsd; do
-	  echo Building ${os}/${arch}...
-	        for pkg in scp-webwallet; do
-			# Ignore unsupported arch/os combinations.
-			if [ "$arch" == "arm64" ]; then
-				if [ "$os" == "windows" ] || [ "$os" == "darwin" ] || [ "$os" == "freebsd" ]; then
-					continue
-				fi
-			fi
+function build {
+  os=${1}
+  arch=${2}
+  pkg=${3}
+  echo Building ${pkg}-${os}-${arch}...
+  # set binary name
+  bin=${pkg}
+  # Different naming convention for windows.
+  if [ "$os" == "windows" ]; then
+    bin=${pkg}.exe
+  fi
+  # Build binary.
+  GOOS=${os} GOARCH=${arch} go build -tags='netgo' -o artifacts/$arch/$os/$bin ./cmd/$pkg
+}
 
-			# Binaries are called 'spc' and i'spd'.
-      bin=$pkg
-
-			# Different naming convention for windows.
-      if [ "$os" == "windows" ]; then
-        bin=${pkg}.exe
-      fi
-
-			# Build binary.
-      GOOS=${os} GOARCH=${arch} go build -tags='netgo' -o artifacts/$arch/$os/$bin ./cmd/$pkg
-    done
-	done
+# Build amd64 binaries.
+for os in darwin linux windows; do
+  build ${os} "amd64" "scp-webwallet"
 done
+
+# Build arm64 binaries.
+for os in darwin linux; do
+  build ${os} "arm64" "scp-webwallet"
+done
+
