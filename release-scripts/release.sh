@@ -81,5 +81,8 @@ for os in darwin linux windows; do
   build ${os} "amd64" "scp-webwallet"
 done
 
-# Build Raspberry Pi binaries.
-build "linux" "arm64" "scp-webwallet"
+# Build arm64 binaries.
+for os in darwin linux; do
+  build ${os} "arm64" "scp-webwallet"
+done
+
