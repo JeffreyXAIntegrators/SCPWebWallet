@@ -108,7 +108,24 @@ func openSansLatin700Woff2Handler(w http.ResponseWriter, req *http.Request, _ ht
 }
 
 func transactionHistoryCsvExport(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
-	history, err := transctionHistoryCsvExportHelper()
+	msgPrefix := "Unable to export transaction history: "
+	sessionID := req.FormValue("session_id")
+	if sessionID == "" {
+		msg := fmt.Sprintf("%s%v", msgPrefix, "Session ID was not supplied.")
+		writeError(w, msg, "")
+		return
+	} else if !sessionIDExists(sessionID) {
+		msg := fmt.Sprintf("%s%v", msgPrefix, "Session ID does not exist.")
+		writeError(w, msg, "")
+		return
+	}
+	wallet, err := getWallet(sessionID)
+	if err != nil {
+		msg := fmt.Sprintf("%s%v", msgPrefix, err)
+		writeError(w, msg, sessionID)
+		return
+	}
+	history, err := transctionHistoryCsvExportHelper(wallet)
 	if err != nil {
 		history = "failed"
 	}
@@ -118,14 +135,14 @@ func transactionHistoryCsvExport(w http.ResponseWriter, req *http.Request, _ htt
 	w.Write([]byte(history))
 }
 
-func transctionHistoryCsvExportHelper() (string, error) {
+func transctionHistoryCsvExportHelper(wallet modules.Wallet) (string, error) {
 	csv := `"Transaction ID","Type","Amount SCP","Amount SPF","Confirmed","DateTime"` + "\n"
 	heightMin := 0
-	confirmedTxns, err := n.Wallet.Transactions(types.BlockHeight(heightMin), n.ConsensusSet.Height())
+	confirmedTxns, err := wallet.Transactions(types.BlockHeight(heightMin), n.ConsensusSet.Height())
 	if err != nil {
 		return "", err
 	}
-	unconfirmedTxns, err := n.Wallet.UnconfirmedTransactions()
+	unconfirmedTxns, err := wallet.UnconfirmedTransactions()
 	if err != nil {
 		return "", err
 	}
