@@ -55,6 +55,8 @@ function build {
     ldflags="${sharedldflags} -H windowsgui"
   fi
   GOOS=${os} GOARCH=${arch} go build -a -tags 'netgo' -trimpath -ldflags="${ldflags}" -o ${binpath} ./cmd/${pkg}
+  # Set the user permissions on the binary
+  chmod 755 ${binpath}
   # Cleanup scp-webwallet windows release.
   if [ ${os} == "windows" ]; then
     rm ./cmd/${pkg}/rsrc_windows_386.syso
