@@ -7,6 +7,7 @@
 <div class="middle pad blue-dashed">
   <div id="copyAddressToClipboard" class="inline-block"></div>
   <div id="expandAddress" class="inline-block"></div>
+  <div id="collapseAddress" class="inline-block"></div>
   <div class="inline-block">
     <form action="/gui?&CACHE_BUSTER;" method="post">
       <input type="hidden" name="session_id" value="&SESSION_ID;">
@@ -15,17 +16,40 @@
   </div>
   <script>
     function addCopiedIcon() {
-      document.getElementById('copiedIcon').innerHTML='🖨️';
+      document.getElementById('copiedIcon').innerHTML = '🖨️'
+    }
+    function removeCopiedIcon() {
+      document.getElementById('copiedIcon').innerHTML = ''
+    }
+    function displayAddress() {
+      if (isAddressCollapsed) {
+        var collapsedAddress = address.substring(0, 10) + '...' + address.substring(address.length - 10);
+        document.getElementById('displayAddress').innerHTML = collapsedAddress
+      } else {
+        document.getElementById('displayAddress').innerHTML = address
+      }
+      removeCopiedIcon()
     }
     function expandAddress() {
-      document.getElementById('displayAddress').innerHTML='&ADDRESS;';
+      isAddressCollapsed = false
+      document.getElementById("collapseAddress").innerHTML = '<button onclick="collapseAddress()">Collapse</button>'
+      document.getElementById("expandAddress").innerHTML = ''
+      displayAddress()
     }
-    document.getElementById("displayAddress").innerHTML = '&ADDRESS;'.substring(0, 10) + '...' + '&ADDRESS;'.substring('&ADDRESS;'.length - 10);
-    document.getElementById("copyAddressToClipboard").innerHTML = `
-      <button onclick="copyToClipboard('&ADDRESS;');addCopiedIcon()">Copy</button>
-    `
-    document.getElementById("expandAddress").innerHTML = `
-      <button onclick="expandAddress()">Expand</button>
-    `
+    function collapseAddress() {
+      isAddressCollapsed = true
+      document.getElementById("expandAddress").innerHTML = '<button onclick="expandAddress()">Expand</button>'
+      document.getElementById("collapseAddress").innerHTML = ''
+      displayAddress()
+    }
+    function copyAddressToClipboard() {
+      copyToClipboard(address)
+      addCopiedIcon()
+    }
+    var address = '&ADDRESS;'.toLowerCase()
+    var isAddressCollapsed = true
+    collapseAddress()
+    document.getElementById("copyAddressToClipboard").innerHTML = `<button onclick="copyAddressToClipboard()">Copy</button>`
   </script>
 </div>
+
