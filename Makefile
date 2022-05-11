@@ -52,7 +52,9 @@ dev:
 
 # release builds and installs release binaries.
 release:
-	go install -tags='netgo' -ldflags='-s -w $(ldflags)' $(release-pkgs)
+	cp "$(shell go env GOROOT)/misc/wasm/wasm_exec.js" ./resources/resources/wasm_exec.js \
+	&& GOOS=js GOARCH=wasm go build -o ./resources/resources/wallet.wasm ./cmd/wasm/main.go \
+  && go install -tags='netgo' -ldflags='-s -w $(ldflags)' $(release-pkgs)
 
 # clean removes all directories that get automatically created during
 # development.
@@ -66,7 +68,9 @@ else
 endif
 
 test:
-	go test -short -tags='debug testing netgo' -timeout=60s $(pkgs) -run=$(run) -count=$(count)
+	cp "$(shell go env GOROOT)/misc/wasm/wasm_exec.js" ./resources/resources/wasm_exec.js \
+	&& GOOS=js GOARCH=wasm go build -o ./resources/resources/wallet.wasm ./cmd/wasm/main.go \
+	&& go test -short -tags='debug testing netgo' -timeout=60s $(pkgs) -run=$(run) -count=$(count)
 cover: clean
 	@mkdir -p cover
 	@for package in $(pkgs); do                                                                                                                                 \

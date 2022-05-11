@@ -86,6 +86,20 @@ func scriptHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params
 	w.Write(javascript)
 }
 
+func wasmExecHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
+	var wasmExec = resources.WasmExec()
+	w.Header().Set("Content-Type", "application/javascript; charset=utf-8")
+	w.Header().Set("Content-Length", strconv.Itoa(len(wasmExec))) //len(dec)
+	w.Write(wasmExec)
+}
+
+func walletWasmHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
+	var walletwasm = resources.WalletWasm()
+	w.Header().Set("Content-Type", "application/wasm")
+	w.Header().Set("Content-Length", strconv.Itoa(len(walletwasm))) //len(dec)
+	w.Write(walletwasm)
+}
+
 func styleHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
 	var cssStyleSheet = resources.CSSStyleSheet()
 	w.Header().Set("Content-Type", "text/css; charset=utf-8")

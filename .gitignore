@@ -8,6 +8,8 @@ artifacts
 cover
 fullcover
 release
+resources/resources/wallet.wasm
+resources/resources/wasm_exec.js
 
 # pdflatex
 doc/whitepaper.aux
