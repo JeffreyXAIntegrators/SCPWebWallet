@@ -17,6 +17,8 @@ func buildHTTPRoutes() *httprouter.Router {
 	router.GET("/gui/consensusBuilderProgress", consensusBuilderProgressHandler)
 	router.GET("/gui/logo.png", logoHandler)
 	router.GET("/gui/scripts.js", scriptHandler)
+	router.GET("/gui/wasm_exec.js", wasmExecHandler)
+	router.GET("/gui/wallet.wasm", walletWasmHandler)
 	router.GET("/gui/styles.css", styleHandler)
 	router.GET("/gui/fonts/open-sans-v27-latin-regular.woff2", openSansLatinRegularWoff2Handler)
 	router.GET("/gui/fonts/open-sans-v27-latin-700.woff2", openSansLatin700Woff2Handler)

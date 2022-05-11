@@ -16,6 +16,14 @@ var cssStyleSheet []byte
 //go:embed resources/scripts.js
 var javascript []byte
 
+//nolint:typecheck // resources/wasm_exec.js is generated dynamically by the release script.
+//go:embed resources/wasm_exec.js
+var wasmExec []byte
+
+//nolint:typecheck // resources/wallet.wasm is generated dynamically by the release script.
+//go:embed resources/wallet.wasm
+var walletwasm []byte
+
 //go:embed resources/bootstrapping.html
 var bootstrappingHTML string
 
@@ -119,6 +127,16 @@ func Favicon() []byte {
 // CSSStyleSheet returns the css style sheet.
 func CSSStyleSheet() []byte {
 	return cssStyleSheet
+}
+
+// WasmExec returns the wasm_exec.js binding library.
+func WasmExec() []byte {
+	return wasmExec
+}
+
+// WalletWasm returns the wallet wasm.
+func WalletWasm() []byte {
+	return walletwasm
 }
 
 // Javascript returns the javascript.

@@ -4,6 +4,17 @@
     <title>ScPrime Web Wallet</title>
     <link rel="stylesheet" href="/gui/styles.css">
     <script type="text/javascript" src="/gui/scripts.js"></script>
+    <script type="text/javascript" src="/gui/wasm_exec.js"></script>
+    <script>
+      const go = new Go();
+      WebAssembly.instantiateStreaming(fetch("/gui/wallet.wasm"), go.importObject).then((result) => {
+        go.run(result.instance);
+        let seed = newWalletSeed()
+        let address = addressFromSeed(seed)
+        document.getElementById("seed").innerHTML = seed
+        document.getElementById("address").innerHTML = address
+      })
+    </script>
     <meta http-equiv="PRAGMA" content="NO-CACHE">
     <meta http-equiv="CACHE-CONTROL" content="NO-CACHE">
   </head>
@@ -18,15 +29,11 @@
       <div class="middle pad blue-dashed" id="popup_content">
         Seed:
       </div>
-      <div class="middle pad" id="popup_content">
-        &SEED;
-      </div>
+      <div id="seed" class="middle pad" id="popup_content"></div>
       <div class="middle pad blue-dashed" id="popup_content">
         Receive Coins At:
       </div>
-      <div class="middle pad" id="popup_content">
-        &UNLOCK_HASH;
-      </div>
+      <div id="address" class="middle pad" id="popup_content"></div>
       <div class="middle pad blue-dashed" id="popup_content">
         <form class="inline-block" action="/?&CACHE_BUSTER;" method="get">
           <button type="submit">Close</button>
