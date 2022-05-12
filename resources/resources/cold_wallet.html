@@ -6,13 +6,61 @@
     <script type="text/javascript" src="/gui/scripts.js"></script>
     <script type="text/javascript" src="/gui/wasm_exec.js"></script>
     <script>
+      function addCopiedAddressIcon() {
+        document.getElementById('copiedAddressIcon').innerHTML = '🖨️'
+      }
+      function addCopiedSeedIcon() {
+        document.getElementById('copiedSeedIcon').innerHTML = '🖨️'
+      }
+      function removeCopiedAddressIcon() {
+        document.getElementById('copiedAddressIcon').innerHTML = ''
+      }
+      function removeCopiedSeedIcon() {
+        document.getElementById('copiedSeedIcon').innerHTML = ''
+      }
+      function displayAddress() {
+        if (isAddressCollapsed) {
+          var collapsedAddress = address.substring(0, 10) + '...' + address.substring(address.length - 10);
+          document.getElementById('displayAddress').innerHTML = collapsedAddress
+        } else {
+          document.getElementById('displayAddress').innerHTML = address
+        }
+        removeCopiedAddressIcon()
+      }
+      function expandAddress() {
+        isAddressCollapsed = false
+        document.getElementById("collapseAddress").innerHTML = '<button onclick="collapseAddress()">Collapse</button>'
+        document.getElementById("expandAddress").innerHTML = ''
+        displayAddress()
+      }
+      function collapseAddress() {
+        isAddressCollapsed = true
+        document.getElementById("expandAddress").innerHTML = '<button onclick="expandAddress()">Expand</button>'
+        document.getElementById("collapseAddress").innerHTML = ''
+        displayAddress()
+      }
+      function copyAddressToClipboard() {
+        copyToClipboard(address)
+        addCopiedAddressIcon()
+        removeCopiedSeedIcon()
+      }
+      function copySeedToClipboard() {
+        copyToClipboard(seed)
+        removeCopiedAddressIcon()
+        addCopiedSeedIcon()
+      }
+      var address
+      var seed
+      var isAddressCollapsed = true
       const go = new Go();
       WebAssembly.instantiateStreaming(fetch("/gui/wallet.wasm"), go.importObject).then((result) => {
         go.run(result.instance);
-        let seed = newWalletSeed()
-        let address = addressFromSeed(seed)
+        seed = newWalletSeed()
+        address = addressFromSeed(seed).toLowerCase()
         document.getElementById("seed").innerHTML = seed
-        document.getElementById("address").innerHTML = address
+        collapseAddress()
+        document.getElementById("copySeedToClipboard").innerHTML = `<button onclick="copySeedToClipboard()">Copy</button>`
+        document.getElementById("copyAddressToClipboard").innerHTML = `<button onclick="copyAddressToClipboard()">Copy</button>`
       })
     </script>
     <meta http-equiv="PRAGMA" content="NO-CACHE">
@@ -29,11 +77,25 @@
       <div class="middle pad blue-dashed" id="popup_content">
         Seed:
       </div>
-      <div id="seed" class="middle pad" id="popup_content"></div>
+      <div>
+        <div id="seed" class="inline-block middle pad" id="popup_content"></div>
+        <div id="copiedSeedIcon" class='inline-block cursor-help' title='seed copied to clipboard'></div>
+      </div>
+      <div class='pad'>
+        <div id="copySeedToClipboard" class="inline-block"></div>
+      </div>
       <div class="middle pad blue-dashed" id="popup_content">
         Receive Coins At:
       </div>
-      <div id="address" class="middle pad" id="popup_content"></div>
+      <div>
+        <div id="displayAddress" class="inline-block middle pad" id="popup_content"></div>
+        <div id="copiedAddressIcon" class='inline-block cursor-help' title='address copied to clipboard'></div>
+      </div>
+      <div class='pad'>
+        <div id="copyAddressToClipboard" class="inline-block"></div>
+        <div id="expandAddress" class="inline-block"></div>
+        <div id="collapseAddress" class="inline-block"></div>
+      </div>
       <div class="middle pad blue-dashed" id="popup_content">
         <form class="inline-block" action="/?&CACHE_BUSTER;" method="get">
           <button type="submit">Close</button>
