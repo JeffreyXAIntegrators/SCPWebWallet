@@ -12,6 +12,7 @@ import (
 	"gitlab.com/scpcorp/webwallet/modules/browserconfig"
 	"gitlab.com/scpcorp/webwallet/modules/launcher"
 	"gitlab.com/scpcorp/webwallet/server"
+	wwConfig "gitlab.com/scpcorp/webwallet/utils/config"
 
 	spdBuild "gitlab.com/scpcorp/ScPrime/build"
 	"gitlab.com/scpcorp/ScPrime/node"
@@ -65,8 +66,8 @@ func installKillSignalHandler() chan os.Signal {
 	return sigChan
 }
 
-func startNode(node *node.Node, params *node.NodeParams, loadStart time.Time) {
-	err := loadNode(node, params)
+func startNode(node *node.Node, config *wwConfig.WebWalletConfig, loadStart time.Time) {
+	err := loadNode(node, config)
 	if err != nil {
 		fmt.Println("Server is unable to create the ScPrime node.")
 		fmt.Println(err)
@@ -78,8 +79,8 @@ func startNode(node *node.Node, params *node.NodeParams, loadStart time.Time) {
 	return
 }
 
-func launchGui(params *node.NodeParams) bool {
-	dir, err := filepath.Abs(params.Dir)
+func launchGui(config *wwConfig.WebWalletConfig) bool {
+	dir, err := filepath.Abs(config.Dir)
 	if err != nil {
 		fmt.Printf("unable to launch GUI: %v\n", err)
 		return false
@@ -89,7 +90,7 @@ func launchGui(params *node.NodeParams) bool {
 }
 
 // StartDaemon uses the config parameters to initialize modules and start the web wallet.
-func StartDaemon(nodeParams *node.NodeParams) (err error) {
+func StartDaemon(config *wwConfig.WebWalletConfig) (err error) {
 	// Record startup time
 	loadStart := time.Now()
 
@@ -107,12 +108,12 @@ func StartDaemon(nodeParams *node.NodeParams) (err error) {
 	fmt.Println("Loading ScPrime Web Wallet...")
 
 	// Start Server
-	server.StartHTTPServer()
+	server.StartHTTPServer(config)
 
 	// Start a node
 	node := &node.Node{}
 	if server.IsRunning() {
-		go startNode(node, nodeParams, loadStart)
+		go startNode(node, config, loadStart)
 	}
 
 	if server.IsRunning() {
@@ -125,7 +126,7 @@ func StartDaemon(nodeParams *node.NodeParams) (err error) {
 	}
 
 	// Launch the GUI
-	launchGui(nodeParams)
+	launchGui(config)
 
 	if !server.IsRunning() {
 		return nil
@@ -141,7 +142,7 @@ func StartDaemon(nodeParams *node.NodeParams) (err error) {
 	// Close
 	server.CloseAllWallets()
 	if node != nil {
-		closeNode(node, nodeParams)
+		closeNode(node, config)
 	}
 	return nil
 }

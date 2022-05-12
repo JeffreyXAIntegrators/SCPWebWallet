@@ -16,65 +16,66 @@ import (
 	"gitlab.com/scpcorp/webwallet/modules/browserconfig"
 	"gitlab.com/scpcorp/webwallet/modules/consensesbuilder"
 	"gitlab.com/scpcorp/webwallet/server"
+	wwConfig "gitlab.com/scpcorp/webwallet/utils/config"
 )
 
-func loadNode(node *node.Node, params *node.NodeParams) error {
+func loadNode(node *node.Node, config *wwConfig.WebWalletConfig) error {
 	fmt.Println("Loading modules:")
 	// Make sure the path is an absolute one.
-	dir, err := filepath.Abs(params.Dir)
+	dir, err := filepath.Abs(config.Dir)
 	if err != nil {
 		return err
 	}
 	node.Dir = dir
 	// Configure Browser
-	needsShutdown, err := initializeBrowser(params)
+	needsShutdown, err := initializeBrowser(config)
 	if err != nil {
 		return err
 	} else if needsShutdown {
 		return nil
 	}
 	// Bootstrap Consensus Set if necessary
-	bootstrapConsensusSet(params)
+	bootstrapConsensusSet(config)
 	// Attach Node To Server
-	server.AttachNode(node, params)
+	server.AttachNode(node)
 	// Load Gateway.
-	err = loadGateway(params, node)
+	err = loadGateway(config, node)
 	if err != nil {
 		return err
 	}
 	// Load Consensus Set
-	err = loadConsensusSet(params, node)
+	err = loadConsensusSet(config, node)
 	if err != nil {
 		return err
 	}
 	// Build Consensus Set if necessary
-	buildConsensusSet(params)
+	buildConsensusSet(config)
 	// Load Transaction Pool
-	err = loadTransactionPool(params, node)
+	err = loadTransactionPool(config, node)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func closeNode(node *node.Node, params *node.NodeParams) error {
+func closeNode(node *node.Node, config *wwConfig.WebWalletConfig) error {
 	fmt.Println("Closing modules:")
-	params.CreateWallet = false
-	params.CreateTransactionPool = false
+	config.CreateWallet = false
+	config.CreateTransactionPool = false
 	consensusbuilder.Close()
-	params.CreateConsensusSet = false
-	params.CreateGateway = false
+	config.CreateConsensusSet = false
+	config.CreateGateway = false
 	err := node.Close()
 	bootstrapper.Close()
 	browserconfig.Close()
 	return err
 }
 
-func initializeBrowser(params *node.NodeParams) (bool, error) {
+func initializeBrowser(config *wwConfig.WebWalletConfig) (bool, error) {
 	loadStart := time.Now()
 	fmt.Printf("Initializing browser...")
 	time.Sleep(1 * time.Millisecond)
-	browserconfig.Start(params.Dir)
+	browserconfig.Start(config.Dir)
 	loadTime := time.Since(loadStart).Seconds()
 	if browserconfig.Status() == browserconfig.Closed {
 		fmt.Println(" closed after", loadTime, "seconds.")
@@ -84,7 +85,7 @@ func initializeBrowser(params *node.NodeParams) (bool, error) {
 		fmt.Println(" failed after", loadTime, "seconds.")
 		return true, nil
 	}
-	browser, err := browserconfig.Browser(params.Dir)
+	browser, err := browserconfig.Browser(config.Dir)
 	if err != nil {
 		fmt.Println(" failed after", loadTime, "seconds.")
 		return true, err
@@ -97,11 +98,11 @@ func initializeBrowser(params *node.NodeParams) (bool, error) {
 	return false, nil
 }
 
-func bootstrapConsensusSet(params *node.NodeParams) {
+func bootstrapConsensusSet(config *wwConfig.WebWalletConfig) {
 	loadStart := time.Now()
 	fmt.Printf("Bootstrapping consensus...")
 	time.Sleep(1 * time.Millisecond)
-	bootstrapper.Start(params.Dir)
+	bootstrapper.Start(config.Dir)
 	loadTime := time.Since(loadStart).Seconds()
 	if bootstrapper.Progress() == bootstrapper.Skipped {
 		fmt.Println(" skipped after", loadTime, "seconds.")
@@ -112,21 +113,16 @@ func bootstrapConsensusSet(params *node.NodeParams) {
 	}
 }
 
-func loadGateway(params *node.NodeParams, node *node.Node) error {
+func loadGateway(config *wwConfig.WebWalletConfig, node *node.Node) error {
 	loadStart := time.Now()
-	if !params.CreateGateway {
+	if !config.CreateGateway {
 		return nil
 	}
-	if params.RPCAddress == "" {
-		params.RPCAddress = "localhost:0"
-	}
-	gatewayDeps := params.GatewayDeps
-	if gatewayDeps == nil {
-		gatewayDeps = modules.ProdDependencies
-	}
+	rpcAddress := "localhost:0"
+	gatewayDeps := modules.ProdDependencies
 	fmt.Printf("Loading gateway...")
 	dir := node.Dir
-	g, err := gateway.NewCustomGateway(params.RPCAddress, params.Bootstrap, filepath.Join(dir, modules.GatewayDir), gatewayDeps)
+	g, err := gateway.NewCustomGateway(rpcAddress, config.Bootstrap, filepath.Join(dir, modules.GatewayDir), gatewayDeps)
 	if err != nil {
 		return err
 	}
@@ -137,21 +133,18 @@ func loadGateway(params *node.NodeParams, node *node.Node) error {
 	return nil
 }
 
-func loadConsensusSet(params *node.NodeParams, node *node.Node) error {
+func loadConsensusSet(config *wwConfig.WebWalletConfig, node *node.Node) error {
 	loadStart := time.Now()
 	c := make(chan error, 1)
 	defer close(c)
-	if !params.CreateConsensusSet {
+	if !config.CreateConsensusSet {
 		return nil
 	}
 	fmt.Printf("Loading consensus set...")
-	consensusSetDeps := params.ConsensusSetDeps
-	if consensusSetDeps == nil {
-		consensusSetDeps = modules.ProdDependencies
-	}
+	consensusSetDeps := modules.ProdDependencies
 	g := node.Gateway
 	dir := node.Dir
-	cs, errChanCS := consensus.NewCustomConsensusSet(g, params.Bootstrap, filepath.Join(dir, modules.ConsensusDir), consensusSetDeps)
+	cs, errChanCS := consensus.NewCustomConsensusSet(g, config.Bootstrap, filepath.Join(dir, modules.ConsensusDir), consensusSetDeps)
 	if err := modules.PeekErr(errChanCS); err != nil {
 		return err
 	}
@@ -162,11 +155,11 @@ func loadConsensusSet(params *node.NodeParams, node *node.Node) error {
 	return nil
 }
 
-func buildConsensusSet(params *node.NodeParams) {
+func buildConsensusSet(config *wwConfig.WebWalletConfig) {
 	loadStart := time.Now()
 	fmt.Printf("Building consensus set...")
 	time.Sleep(1 * time.Millisecond)
-	consensusbuilder.Start(params.Dir)
+	consensusbuilder.Start(config.Dir)
 	loadTime := time.Since(loadStart).Seconds()
 	if consensusbuilder.Progress() == consensusbuilder.Closed {
 		fmt.Println(" closed after", loadTime, "seconds.")
@@ -175,16 +168,13 @@ func buildConsensusSet(params *node.NodeParams) {
 	}
 }
 
-func loadTransactionPool(params *node.NodeParams, node *node.Node) error {
+func loadTransactionPool(config *wwConfig.WebWalletConfig, node *node.Node) error {
 	loadStart := time.Now()
-	if !params.CreateTransactionPool {
+	if !config.CreateTransactionPool {
 		return nil
 	}
 	fmt.Printf("Loading transaction pool...")
-	tpoolDeps := params.TPoolDeps
-	if tpoolDeps == nil {
-		tpoolDeps = modules.ProdDependencies
-	}
+	tpoolDeps := modules.ProdDependencies
 	cs := node.ConsensusSet
 	g := node.Gateway
 	dir := node.Dir
@@ -200,15 +190,12 @@ func loadTransactionPool(params *node.NodeParams, node *node.Node) error {
 }
 
 // LoadWallet loads the wallet module
-func LoadWallet(params *node.NodeParams, node *node.Node, walletDirName string) error {
+func LoadWallet(config *wwConfig.WebWalletConfig, node *node.Node, walletDirName string) error {
 	loadStart := time.Now()
-	if !params.CreateWallet {
+	if !config.CreateWallet {
 		return nil
 	}
-	walletDeps := params.WalletDeps
-	if walletDeps == nil {
-		walletDeps = modules.ProdDependencies
-	}
+	walletDeps := modules.ProdDependencies
 	fmt.Printf("Loading wallet...")
 	cs := node.ConsensusSet
 	tp := node.TransactionPool
