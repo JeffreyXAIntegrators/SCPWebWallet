@@ -19,7 +19,6 @@ import (
 	"gitlab.com/scpcorp/webwallet/resources"
 
 	"gitlab.com/NebulousLabs/errors"
-	"gitlab.com/NebulousLabs/fastrand"
 
 	spdBuild "gitlab.com/scpcorp/ScPrime/build"
 	"gitlab.com/scpcorp/ScPrime/crypto"
@@ -119,6 +118,11 @@ func openSansLatin700Woff2Handler(w http.ResponseWriter, req *http.Request, _ ht
 	w.Header().Set("Content-Type", "font/woff2")
 	w.Header().Set("Content-Length", strconv.Itoa(len(font))) //len(dec)
 	w.Write(font)
+}
+
+func coldWalletHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
+	html := resources.ColdWalletHTML()
+	writeStaticHTML(w, html, "")
 }
 
 func transactionHistoryCsvExport(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
@@ -796,29 +800,6 @@ func bootstrappingHandler(w http.ResponseWriter, req *http.Request, _ httprouter
 func buildingConsensusSetHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
 	progress := consensusbuilder.Progress()
 	html := strings.Replace(resources.ConsensusSetBuildingHTML(), "&CONSENSUS_BUILDER_PROGRESS;", progress, -1)
-	writeStaticHTML(w, html, "")
-}
-
-func coldWalletHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
-	var seed modules.Seed
-	// zero arguments: generate a seed
-	fastrand.Read(seed[:])
-	seedStr, seedErr := modules.SeedToString(seed, "english")
-	unlockHashStr := ""
-	if seedErr != nil {
-		seedStr = fmt.Sprintf("Unable to generate cold wallet seed: %v", seedErr)
-		fmt.Println(seedStr)
-	} else {
-		_, pk := crypto.GenerateKeyPairDeterministic(crypto.HashAll(seed, 0))
-		unlockHash := types.UnlockConditions{
-			PublicKeys:         []types.SiaPublicKey{types.Ed25519PublicKey(pk)},
-			SignaturesRequired: 1,
-		}.UnlockHash()
-		unlockHashStr = strings.ToUpper(fmt.Sprintf("%s", unlockHash))
-	}
-	html := resources.ColdWalletHTML()
-	html = strings.Replace(html, "&SEED;", seedStr, -1)
-	html = strings.Replace(html, "&UNLOCK_HASH;", unlockHashStr, -1)
 	writeStaticHTML(w, html, "")
 }
 
