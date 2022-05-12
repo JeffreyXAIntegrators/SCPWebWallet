@@ -1233,7 +1233,7 @@ func restoreSeedHelper(newPassword string, seed modules.Seed, sessionID string) 
 func shutdownHelper(sessionID string) {
 	sleepDuration := 5000 * time.Millisecond
 	time.Sleep(sleepDuration)
-	if time.Now().After(heartbeat.Add(sleepDuration)) {
+	if !config.Headless && time.Now().After(heartbeat.Add(sleepDuration)) {
 		fmt.Println("Heartbeat expired.")
 		CloseAllWallets()
 		srv.Shutdown(context.Background())

@@ -16,11 +16,13 @@ import (
 	"gitlab.com/scpcorp/ScPrime/modules"
 	"gitlab.com/scpcorp/ScPrime/modules/wallet"
 	"gitlab.com/scpcorp/ScPrime/node"
+
+	wwConfig "gitlab.com/scpcorp/webwallet/utils/config"
 )
 
 var (
 	n         *node.Node
-	nParams   *node.NodeParams
+	config    *wwConfig.WebWalletConfig
 	srv       *http.Server
 	status    string
 	heartbeat time.Time
@@ -41,7 +43,8 @@ type Session struct {
 }
 
 // StartHTTPServer starts the HTTP server to serve the GUI.
-func StartHTTPServer() {
+func StartHTTPServer(webWalletConfig *wwConfig.WebWalletConfig) {
+	config = webWalletConfig
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
 	srv = &http.Server{Addr: ":4300", Handler: buildHTTPRoutes()}
@@ -79,9 +82,8 @@ func Wait() chan struct{} {
 }
 
 // AttachNode attaches the node to the HTTP server.
-func AttachNode(node *node.Node, params *node.NodeParams) {
+func AttachNode(node *node.Node) {
 	n = node
-	nParams = params
 	if srv != nil {
 		srv.Handler = buildHTTPRoutes()
 	}
@@ -90,10 +92,7 @@ func AttachNode(node *node.Node, params *node.NodeParams) {
 // newWallet attaches a newly created wallet module to the session.
 func newWallet(walletDirName string, sessionID string) (modules.Wallet, error) {
 	loadStart := time.Now()
-	walletDeps := nParams.WalletDeps
-	if walletDeps == nil {
-		walletDeps = modules.ProdDependencies
-	}
+	walletDeps := modules.ProdDependencies
 	fmt.Printf("Loading wallet...")
 	walletDir := filepath.Join(n.Dir, "wallets", walletDirName)
 	_, err := os.Stat(walletDir)
@@ -122,10 +121,7 @@ func newWallet(walletDirName string, sessionID string) (modules.Wallet, error) {
 // existingWallet attaches an existing wallet module to the session.
 func existingWallet(walletDirName string, sessionID string) (modules.Wallet, error) {
 	loadStart := time.Now()
-	walletDeps := nParams.WalletDeps
-	if walletDeps == nil {
-		walletDeps = modules.ProdDependencies
-	}
+	walletDeps := modules.ProdDependencies
 	fmt.Printf("Loading wallet...")
 	walletDir := filepath.Join(n.Dir, "wallets", walletDirName)
 	_, err := os.Stat(walletDir)
