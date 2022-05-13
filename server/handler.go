@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"crypto/rand"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -106,23 +107,23 @@ func styleHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params)
 	w.Write(cssStyleSheet)
 }
 
-func openSansLatinRegularWoff2Handler(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
-	var font = resources.OpenSansLatinRegularWoff2()
-	w.Header().Set("Content-Type", "font/woff2")
-	w.Header().Set("Content-Length", strconv.Itoa(len(font))) //len(dec)
-	w.Write(font)
-}
-
-func openSansLatin700Woff2Handler(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
-	var font = resources.OpenSansLatin700Woff2()
-	w.Header().Set("Content-Type", "font/woff2")
-	w.Header().Set("Content-Length", strconv.Itoa(len(font))) //len(dec)
-	w.Write(font)
-}
-
 func coldWalletHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
+	style := resources.CSSStyleSheet()
+	script := resources.Javascript()
+	logo := resources.Logo()
+	wasmExec := resources.WasmExec()
+	walletWasm := resources.WalletWasm()
 	html := resources.ColdWalletHTML()
-	writeStaticHTML(w, html, "")
+	html = strings.Replace(html, "&STYLE;", string(style), -1)
+	html = strings.Replace(html, "&SCRIPT;", string(script), -1)
+	html = strings.Replace(html, "&LOGO;", base64.StdEncoding.EncodeToString(logo), -1)
+	html = strings.Replace(html, "&WASM_EXEC;", string(wasmExec), -1)
+	html = strings.Replace(html, "&WALLET_WASM;", base64.StdEncoding.EncodeToString(walletWasm), -1)
+	htmlBytes := []byte(html)
+	w.Header().Set("Content-Disposition", "attachment; filename=scprime-cold-wallet.html")
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Content-Length", strconv.Itoa(len(htmlBytes))) //len(dec)
+	w.Write(htmlBytes)
 }
 
 func transactionHistoryCsvExport(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {

@@ -135,6 +135,10 @@ function refreshConsensusBuilderProgress() {
   }
 }
 function refreshHeartbeat(sessionID) {
+  var coldWalletElement = document.getElementById("coldWallet")
+  if (typeof(coldWalletElement) != 'undefined' && coldWalletElement != null) {
+    return
+  }
   var data = new FormData();
   data.append("session_id", sessionID)
   fetch("/gui/heartbeat", {method: "POST", body: data})
@@ -150,7 +154,7 @@ function refreshHeartbeat(sessionID) {
     })
 }
 function shutdownNotice() {
-  document.body.innerHTML = `
+  var shutdownNoticeHtml = `
     <div class="col-5 left top no-wrap">
       <div>
         <img class="scprime-logo" alt="ScPrime Web Wallet" src="/gui/logo.png"/>
@@ -162,6 +166,12 @@ function shutdownNotice() {
     </div>
     <div id="fade" class="fade"></div>
   `
+  var contentElement = document.getElementById("content")
+  if (typeof(contentElement) != 'undefined' && contentElement != null) {
+    contentElement.innerHTML = shutdownNoticeHtml
+  } else {
+    document.body.innerHTML = shutdownNoticeHtml
+  }
 }
 function copyToClipboard(textToCopy) {
   var temp = document.createElement("input");
