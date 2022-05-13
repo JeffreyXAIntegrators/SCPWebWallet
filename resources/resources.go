@@ -108,12 +108,6 @@ var expandedMenuForm string
 //go:embed resources/forms/explain_whale.html
 var explainWhaleForm string
 
-//go:embed resources/fonts/open-sans-v27-latin/open-sans-v27-latin-regular.woff2
-var openSansLatinRegularWoff2 []byte
-
-//go:embed resources/fonts/open-sans-v27-latin/open-sans-v27-latin-700.woff2
-var openSansLatin700Woff2 []byte
-
 // Logo returns the Logo.
 func Logo() []byte {
 	return logo
@@ -284,12 +278,3 @@ func CollapsedMenuForm() string {
 	return collapsedMenuForm
 }
 
-// OpenSansLatinRegularWoff2 returns the open sans font
-func OpenSansLatinRegularWoff2() []byte {
-	return openSansLatinRegularWoff2
-}
-
-// OpenSansLatin700Woff2 returns the open sans font
-func OpenSansLatin700Woff2() []byte {
-	return openSansLatin700Woff2
-}
