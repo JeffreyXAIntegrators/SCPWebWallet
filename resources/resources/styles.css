@@ -61,8 +61,6 @@ a:active {
   color: #2074EE;
 }
 .scprime-logo {
-  background-image: url(/gui/logo.png);
-  background-size: cover;
   height: 40px;
   width: 191px;
 }
