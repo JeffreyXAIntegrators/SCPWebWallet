@@ -6,9 +6,13 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"math/big"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -19,11 +23,12 @@ import (
 	consensusbuilder "gitlab.com/scpcorp/webwallet/modules/consensesbuilder"
 	"gitlab.com/scpcorp/webwallet/resources"
 
-	"gitlab.com/NebulousLabs/errors"
+	nebErrors "gitlab.com/NebulousLabs/errors"
 
 	spdBuild "gitlab.com/scpcorp/ScPrime/build"
 	"gitlab.com/scpcorp/ScPrime/crypto"
 	"gitlab.com/scpcorp/ScPrime/modules"
+	"gitlab.com/scpcorp/ScPrime/modules/consensus"
 	"gitlab.com/scpcorp/ScPrime/types"
 
 	"github.com/julienschmidt/httprouter"
@@ -804,6 +809,56 @@ func buildingConsensusSetHandler(w http.ResponseWriter, req *http.Request, _ htt
 	writeStaticHTML(w, html, "")
 }
 
+func uploadConsensusSetFormHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
+	writeStaticHTML(w, resources.ConsensusSetUploadingHTML(), "")
+}
+
+func uploadConsensusSetHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
+	file, _, err := req.FormFile("file")
+	if err != nil {
+		msg := fmt.Sprintf("Unable to upload consensus set: %v", err)
+		writeError(w, msg, "")
+		return
+	}
+	consensusDir := filepath.Join(config.Dir, modules.ConsensusDir)
+	consensusDb := filepath.Join(consensusDir, consensus.DatabaseFilename)
+	_, err = os.Stat(consensusDir)
+	if errors.Is(err, os.ErrNotExist) {
+		err = os.MkdirAll(consensusDir, os.ModePerm)
+	}
+	if err != nil {
+		msg := fmt.Sprintf("Unable to create the consensus directory: %v", err)
+		writeError(w, msg, "")
+		return
+	}
+	out, err := os.Create(consensusDb)
+	if err != nil {
+		msg := fmt.Sprintf("Failed to open the consensus set file for writing: %v", err)
+		writeError(w, msg, "")
+		return
+	}
+	_, err = io.Copy(out, file)
+	if err != nil {
+		fmt.Fprintln(w, err)
+	}
+	err = out.Close()
+	if err != nil {
+		msg := fmt.Sprintf("Failed to close the consensus set file after writing: %v", err)
+		writeError(w, msg, "")
+		return
+	}
+	err = file.Close()
+	if err != nil {
+		msg := fmt.Sprintf("Failed to close the consensus set uplload stream after writing: %v", err)
+		writeError(w, msg, "")
+		return
+	}
+	bootstrapper.Skip()
+	time.Sleep(50 * time.Millisecond)
+	consensusbuilder.Initialize()
+	initializingNodeHandler(w, req, nil)
+}
+
 func expandMenuHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
 	sessionID := req.FormValue("session_id")
 	if sessionID == "" || !sessionIDExists(sessionID) {
@@ -1164,7 +1219,7 @@ func isPasswordValid(wallet modules.Wallet, password string) (bool, error) {
 			}
 			return false, nil
 		}
-		err = errors.Compose(err, keyErr)
+		err = nebErrors.Compose(err, keyErr)
 	}
 	return false, err
 }

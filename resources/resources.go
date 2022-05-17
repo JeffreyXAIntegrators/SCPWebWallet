@@ -30,6 +30,9 @@ var bootstrappingHTML string
 //go:embed resources/consensus_set_building.html
 var consensusSetBuildingHTML string
 
+//go:embed resources/consensus_set_uploading.html
+var consensusSetUploadingHTML string
+
 //go:embed resources/cold_wallet.html
 var coldWalletHTML string
 
@@ -146,6 +149,11 @@ func BootstrappingHTML() string {
 // ConsensusSetBuildingHTML returns an html page
 func ConsensusSetBuildingHTML() string {
 	return consensusSetBuildingHTML
+}
+
+// ConsensusSetUploadingHTML returns an html page
+func ConsensusSetUploadingHTML() string {
+	return consensusSetUploadingHTML
 }
 
 // ColdWalletHTML returns an html page
@@ -277,4 +285,3 @@ func ExplainWhaleForm() string {
 func CollapsedMenuForm() string {
 	return collapsedMenuForm
 }
-
