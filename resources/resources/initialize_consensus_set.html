@@ -18,17 +18,20 @@
       <div class="middle pad blue-dashed" id="popup_content">
         &CONSENSUS_MESSAGE;. Would you like to bootstrap the consensus set from 
         https://consensus.scpri.me, build a consensus set from a peer pool of full nodes, 
-        or just download the cold wallet?
+        upload an existing consensus set, or just download the cold wallet?
       </div>
-      <form class="inline-block" action="/initializeBootstrapper?&CACHE_BUSTER;" method="get">
-        <button type="submit">Bootstrap</button>
-      </form>
-      <form class="inline-block" action="/initializeConsensusBuilder?&CACHE_BUSTER;" method="get">
-        <button type="submit">Build</button>
-      </form>
-      <form class="inline-block" action="/initializeColdWallet?&CACHE_BUSTER;" method="get">
-        <button type="submit">Cold</button>
-      </form>
+        <form class="inline-block" action="/initializeBootstrapper?&CACHE_BUSTER;" method="get">
+          <button type="submit">Bootstrap</button>
+        </form>
+        <form class="inline-block" action="/initializeConsensusBuilder?&CACHE_BUSTER;" method="get">
+          <button type="submit">Build</button>
+        </form>
+        <form class="inline-block" action="/uploadConsensusSetForm?&CACHE_BUSTER;" method="get">
+          <button type="submit">Upload</button>
+        </form>
+        <form class="inline-block" action="/initializeColdWallet?&CACHE_BUSTER;" method="get">
+          <button type="submit">Cold</button>
+        </form>
     </div>
     <div id="fade" class="fade"></div>
   </body>

@@ -57,6 +57,7 @@ func Start(dataDir string) {
 		if LocalConsensusSize > build.ConsensusSizeByteCheck() {
 			// There is no need to block loading the wallet because the on-disk
 			// consensus size is larger than the consensus size byte check.
+			status = `100`
 			return
 		}
 	}

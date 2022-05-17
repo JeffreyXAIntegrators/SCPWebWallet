@@ -1,3 +1,21 @@
+function uploadConsensusSet() {
+  var formElement = document.getElementById("consensusSetFile");
+  var xhr = new XMLHttpRequest();
+  xhr.upload.onprogress = function(evt) {
+    var percent = Math.round(evt.loaded / evt.total * 100);
+    if (percent > 98) {
+      percent = 99
+    }
+    document.getElementById("popup_content").innerHTML = "Uplading Consensus (" + percent + "%)"
+  }
+  xhr.onload = function() {
+    document.getElementById("popup_content").innerHTML = "Uplading Consensus (100%)"
+    console.log('Upload completed successfully.');
+    document.getElementById("reload").submit()
+  }
+  xhr.open("POST", formElement.action);
+  xhr.send(new FormData(formElement));
+}
 function refreshBlockHeight(sessionID) {
   if (document.getElementsByClassName('block_height').length > 0) {
     var data = new FormData();
