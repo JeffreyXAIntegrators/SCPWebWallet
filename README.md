@@ -31,7 +31,7 @@ git clone https://gitlab.com/scpcorp/webwallet
 cd webwallet && make
 ```
 
-This will install the `scp-webwallet` binary in your $GOPATH/bin folder (By default, this is $HOME/go/bin).
+This will install the `scp-webwallet` and `scp-webwallet-server` binaries into your $GOPATH/bin folder (By default, this is $HOME/go/bin).
 
 Other Makefile commands are:
 * `make all`, another way to build and install the release binaries

@@ -24,7 +24,9 @@ pkgs = \
 
 # release-pkgs determine which packages are built for release and distrubtion
 # when running a 'make release' command.
-release-pkgs = ./cmd/scp-webwallet
+release-pkgs = \
+	./cmd/scp-webwallet \
+	./cmd/scp-webwallet-server
 
 # run determines which tests run when running any variation of 'make test'.
 run = .
