@@ -126,10 +126,16 @@ func StartDaemon(config *wwConfig.WebWalletConfig) (err error) {
 	}
 
 	// Launch the GUI
-	launchGui(config)
+	if !config.Headless {
+		launchGui(config)
+	}
 
 	if !server.IsRunning() {
 		return nil
+	}
+
+	if config.Headless {
+		fmt.Println("SCP Web Wallet is running at http://localhost:4300")
 	}
 
 	select {

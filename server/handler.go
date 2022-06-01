@@ -74,7 +74,11 @@ func heartbeatHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Par
 	sessionID := req.FormValue("session_id")
 	updateHeartbeat(sessionID)
 	go shutdownHelper(sessionID)
-	writeArray(w, []string{"true"})
+	if config.Headless {
+		writeArray(w, []string{"true"})
+	} else {
+		writeArray(w, []string{"false"})
+	}
 }
 
 func logoHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {

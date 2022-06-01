@@ -29,7 +29,7 @@ function build {
   bin=${pkg}
   if [ ${os} == "windows" ]; then
     bin=${bin}.exe
-  elif [ ${os} == "darwin" ]; then
+  elif [ ${os} == "darwin" ] && [ ${pkg} == "scp-webwallet" ]; then
     bin=${bin}.app
   fi
   # set folder
@@ -38,7 +38,7 @@ function build {
   mkdir -p ${folder}
   # set path to bin
   binpath=${folder}/${bin}
-  if [ ${os} == "darwin" ]; then
+  if [ ${os} == "darwin" ] && [ ${pkg} == "scp-webwallet" ]; then
     # Appify the scp-webwallet darwin release. More documentation at `./release-scripts/app_resources/darwin/scp-webwallet/README.md`.
     cp -a ./release-scripts/app_resources/darwin/${pkg}/${bin} ${binpath}
     # touch the scp-webwallet.app container to reset the time created timestamp
@@ -47,7 +47,7 @@ function build {
   fi
   # set ldflags
   ldflags=$sharedldflags
-  if [ ${os} == "windows" ]; then
+  if [ ${os} == "windows" ] && [ ${pkg} == "scp-webwallet" ]; then
     # Appify the scp-webwallet windows release. More documentation at `./release-scripts/app_resources/windows/scp-webwallet/README.md`
     cp ./release-scripts/app_resources/windows/${pkg}/rsrc_windows_386.syso ./cmd/${pkg}/rsrc_windows_386.syso
     cp ./release-scripts/app_resources/windows/${pkg}/rsrc_windows_amd64.syso ./cmd/${pkg}/rsrc_windows_amd64.syso
@@ -58,7 +58,7 @@ function build {
   # Set the user permissions on the binary
   chmod 755 ${binpath}
   # Cleanup scp-webwallet windows release.
-  if [ ${os} == "windows" ]; then
+  if [ ${os} == "windows" ] && [ ${pkg} == "scp-webwallet" ]; then
     rm ./cmd/${pkg}/rsrc_windows_386.syso
     rm ./cmd/${pkg}/rsrc_windows_amd64.syso
   fi
@@ -81,13 +81,15 @@ echo Building wallet.wasm
 cp "$(go env GOROOT)/misc/wasm/wasm_exec.js" ./resources/resources/wasm_exec.js
 GOOS=js GOARCH=wasm go build -o ./resources/resources/wallet.wasm ./cmd/wasm/main.go
 
-# Build amd64 binaries.
-for os in darwin linux windows; do
-  build ${os} "amd64" "scp-webwallet"
-done
-
-# Build arm64 binaries.
-for os in darwin linux; do
-  build ${os} "arm64" "scp-webwallet"
+# Build the packages
+for pkg in scp-webwallet scp-webwallet-server; do
+  # Build amd64 binaries.
+  for os in darwin linux windows; do
+    build ${os} "amd64" ${pkg}
+  done
+  # Build arm64 binaries.
+  for os in darwin linux; do
+    build ${os} "arm64" ${pkg}
+  done
 done
 

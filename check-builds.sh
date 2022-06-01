@@ -30,13 +30,15 @@ echo Building wallet.wasm
 cp "$(go env GOROOT)/misc/wasm/wasm_exec.js" ./resources/resources/wasm_exec.js
 GOOS=js GOARCH=wasm go build -o ./resources/resources/wallet.wasm ./cmd/wasm/main.go
 
-# Build amd64 binaries.
-for os in darwin linux windows; do
-  build ${os} "amd64" "scp-webwallet"
-done
-
-# Build arm64 binaries.
-for os in darwin linux; do
-  build ${os} "arm64" "scp-webwallet"
+# Build the packages
+for pkg in scp-webwallet scp-webwallet-server; do
+  # Build amd64 binaries.
+  for os in darwin linux windows; do
+    build ${os} "amd64" ${pkg}
+  done
+  # Build arm64 binaries.
+  for os in darwin linux; do
+    build ${os} "arm64" ${pkg}
+  done
 done
 
