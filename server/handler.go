@@ -73,11 +73,20 @@ func consensusBuilderProgressHandler(w http.ResponseWriter, req *http.Request, _
 func heartbeatHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
 	sessionID := req.FormValue("session_id")
 	updateHeartbeat(sessionID)
-	go shutdownHelper(sessionID)
+	go heartbeatHelper(sessionID)
 	if config.Headless {
-		writeArray(w, []string{"true"})
-	} else {
 		writeArray(w, []string{"false"})
+	} else {
+		writeArray(w, []string{"true"})
+	}
+}
+
+func shutdownServerHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
+	go shutdownHelper()
+	if config.Headless {
+		writeArray(w, []string{"false"})
+	} else {
+		writeArray(w, []string{"true"})
 	}
 }
 
@@ -1034,6 +1043,11 @@ func writeStaticHTML(w http.ResponseWriter, html string, sessionID string) {
 	cacheBuster := hex.EncodeToString(b)
 	html = strings.Replace(html, "&CACHE_BUSTER;", cacheBuster, -1)
 	html = strings.Replace(html, "&SESSION_ID;", sessionID, -1)
+	if config.Headless {
+		html = strings.Replace(html, "&SHUTDOWN_BUTTON;", "", -1)
+	} else {
+		html = strings.Replace(html, "&SHUTDOWN_BUTTON;", "<div class='pad'><button onclick='shutdownServer()'>Safe Shutdown</button></div>", -1)
+	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	fmt.Fprint(w, html)
 }
@@ -1060,6 +1074,11 @@ func writeHTML(w http.ResponseWriter, html string, sessionID string) {
 	html = strings.Replace(html, "&SPF_BALANCE;", fmtSpfBal, -1)
 	html = strings.Replace(html, "&SCP_CLAIM_BALANCE;", fmtClmBal, -1)
 	html = strings.Replace(html, "&WHALE_SIZE;", fmtWhale, -1)
+	if config.Headless {
+		html = strings.Replace(html, "&SHUTDOWN_BUTTON;", "", -1)
+	} else {
+		html = strings.Replace(html, "&SHUTDOWN_BUTTON;", "<div class='pad'><button onclick='shutdownServer()'>Shutdown</button></div>", -1)
+	}
 	if menuIsCollapsed(sessionID) {
 		html = strings.Replace(html, "&MENU;", resources.CollapsedMenuForm(), -1)
 	} else {
@@ -1271,8 +1290,8 @@ func restoreSeedHelper(newPassword string, seed modules.Seed, sessionID string) 
 	setStatus("")
 }
 
-func shutdownHelper(sessionID string) {
-	sleepDuration := 5000 * time.Millisecond
+func heartbeatHelper(sessionID string) {
+	sleepDuration := 30 * time.Minute
 	time.Sleep(sleepDuration)
 	if !config.Headless && time.Now().After(heartbeat.Add(sleepDuration)) {
 		fmt.Println("Heartbeat expired.")
@@ -1286,6 +1305,16 @@ func shutdownHelper(sessionID string) {
 	}
 	if time.Now().After(session.heartbeat.Add(sleepDuration)) {
 		closeWallet(sessionID)
+	}
+}
+
+func shutdownHelper() {
+	if !config.Headless {
+		sleepDuration := 1 * time.Second
+		time.Sleep(sleepDuration)
+		fmt.Println("Shutdown server requested.")
+		CloseAllWallets()
+		srv.Shutdown(context.Background())
 	}
 }
 
