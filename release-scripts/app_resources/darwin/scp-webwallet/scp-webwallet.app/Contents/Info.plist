@@ -9,7 +9,7 @@
 		<key>CFBundleName</key>
 		<string>scp-webwallet</string>
 		<key>CFBundleExecutable</key>
-		<string>MacOS/scp-webwallet.app</string>
+		<string>MacOS/scp-webwallet</string>
 		<key>CFBundleIdentifier</key>
 		<string>scp-webwallet</string>
 		<key>CFBundleVersion</key>
