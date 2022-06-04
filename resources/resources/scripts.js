@@ -42,7 +42,7 @@ function refreshBlockHeight(sessionID) {
         for (const element of document.getElementsByClassName("status")){
           element.className="status " + color
         }
-        setTimeout(() => {refreshBlockHeight(sessionID);}, 1000);
+        setTimeout(() => {refreshBlockHeight(sessionID);}, 60000); // 1 minute in milliseconds
       })
       .catch(error => {
         console.error("Error:", error);
@@ -90,7 +90,7 @@ function refreshBalance(sessionID) {
         if (typeof(whaleSizeButton) != 'undefined' && whaleSizeButton != null) {
           whaleSizeButton.value = "Whale Size: " + result[4];
         }
-        setTimeout(() => {refreshBalance(sessionID);}, 1000);
+        setTimeout(() => {refreshBalance(sessionID);}, 60000); // 1 minute in milliseconds
       })
       .catch(error => {
         console.error("Error:", error);
@@ -163,12 +163,24 @@ function refreshHeartbeat(sessionID) {
     .then(response => response.json())
     .then(result => {
     	if (result[0] === "true") {
-        setTimeout(() => {refreshHeartbeat(sessionID);}, 200);
+        setTimeout(() => {refreshHeartbeat(sessionID);}, 60000); // 1 minute in milliseconds
     	}
     })
     .catch(error => {
       console.error("Error:", error);
       shutdownNotice()
+    })
+}
+function shutdownServer() {
+  fetch("/shutdownServer", {method: "POST"})
+    .then(response => response.json())
+    .then(result => {
+      if (result[0] === "true") {
+        shutdownNotice()
+      }
+    })
+    .catch(error => {
+      console.error("Error:", error);
     })
 }
 function shutdownNotice() {
@@ -180,7 +192,7 @@ function shutdownNotice() {
     </div>
     <div id="popup" class="popup center">
       <h2 class="uppercase">Shutdown Notice</h2>
-      <div class="middle pad blue-dashed" id="popup_content">Wallet was shutdown.</div>
+      <div class="middle pad blue-dashed" id="popup_content">Wallet was shutdown. You can now close your browser.</div>
     </div>
     <div id="fade" class="fade"></div>
   `
