@@ -43,7 +43,7 @@ function build {
     cp -a ./release-scripts/app_resources/darwin/${pkg}/${bin} ${binpath}
     # touch the scp-webwallet.app container to reset the time created timestamp
     touch ${binpath}
-    binpath=${binpath}/Contents/MacOS/${bin}
+    binpath=${binpath}/Contents/MacOS/${pkg}
   fi
   # set ldflags
   ldflags=$sharedldflags
