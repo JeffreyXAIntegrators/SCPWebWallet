@@ -21,13 +21,12 @@ import (
 )
 
 var (
-	n         *node.Node
-	config    *wwConfig.WebWalletConfig
-	srv       *http.Server
-	status    string
-	heartbeat time.Time
-	sessions  []*Session
-	waitCh    chan struct{}
+	n        *node.Node
+	config   *wwConfig.WebWalletConfig
+	srv      *http.Server
+	status   string
+	sessions []*Session
+	waitCh   chan struct{}
 )
 
 // Session is a struct that tracks session settings
@@ -39,7 +38,6 @@ type Session struct {
 	cachedPage    string
 	wallet        modules.Wallet
 	name          string
-	heartbeat     time.Time
 }
 
 // StartHTTPServer starts the HTTP server to serve the GUI.
@@ -188,16 +186,6 @@ func getWallet(sessionID string) (modules.Wallet, error) {
 		return nil, errors.New("no wallet is attached to the session")
 	}
 	return session.wallet, nil
-}
-
-// updateHeartbeat updates and returns the heartbeat time.
-func updateHeartbeat(sessionID string) time.Time {
-	heartbeat = time.Now()
-	session, _ := getSession(sessionID)
-	if session != nil {
-		session.heartbeat = time.Now()
-	}
-	return heartbeat
 }
 
 // setStatus sets the status.

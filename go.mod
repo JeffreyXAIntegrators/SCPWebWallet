@@ -15,6 +15,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dchest/threefish v0.0.0-20120919164726-3ecf4c494abf // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
+	github.com/georgemcarlson/lorca v0.1.13 // indirect
 	github.com/getkin/kin-openapi v0.60.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect

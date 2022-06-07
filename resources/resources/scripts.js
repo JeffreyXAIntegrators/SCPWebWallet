@@ -152,25 +152,6 @@ function refreshConsensusBuilderProgress() {
     setTimeout(() => {refreshConsensusBuilderProgress();}, 50);
   }
 }
-function refreshHeartbeat(sessionID) {
-  var coldWalletElement = document.getElementById("coldWallet")
-  if (typeof(coldWalletElement) != 'undefined' && coldWalletElement != null) {
-    return
-  }
-  var data = new FormData();
-  data.append("session_id", sessionID)
-  fetch("/gui/heartbeat", {method: "POST", body: data})
-    .then(response => response.json())
-    .then(result => {
-    	if (result[0] === "true") {
-        setTimeout(() => {refreshHeartbeat(sessionID);}, 60000); // 1 minute in milliseconds
-    	}
-    })
-    .catch(error => {
-      console.error("Error:", error);
-      shutdownNotice()
-    })
-}
 function shutdownServer() {
   fetch("/shutdownServer", {method: "POST"})
     .then(response => response.json())
@@ -222,5 +203,4 @@ function addressFromSeed(seed) {
 }
 refreshBootstrapperProgress()
 refreshConsensusBuilderProgress()
-refreshHeartbeat("")
 

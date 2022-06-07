@@ -21,8 +21,6 @@ func buildHTTPRoutes() *httprouter.Router {
 	router.GET("/gui/wallet.wasm", walletWasmHandler)
 	router.GET("/gui/styles.css", styleHandler)
 	router.GET("/initializeColdWallet", coldWalletHandler)
-	router.POST("/gui/heartbeat", heartbeatHandler)
-	router.POST("/shutdownServer", shutdownServerHandler)
 	if n == nil {
 		router.GET("/", initializingNodeHandler)
 		router.GET("/initializeBootstrapper", initializeBootstrapperHandler)
