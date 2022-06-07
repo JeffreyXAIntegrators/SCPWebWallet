@@ -79,11 +79,11 @@ func startNode(node *node.Node, config *wwConfig.WebWalletConfig, loadStart time
 	return
 }
 
-func launchGui(config *wwConfig.WebWalletConfig) bool {
+func launchGui(config *wwConfig.WebWalletConfig) chan struct{} {
 	dir, err := filepath.Abs(config.Dir)
 	if err != nil {
 		fmt.Printf("unable to launch GUI: %v\n", err)
-		return false
+		return nil
 	}
 	browser, _ := browserconfig.Browser(dir)
 	return launcher.Launch(browser)
@@ -126,8 +126,9 @@ func StartDaemon(config *wwConfig.WebWalletConfig) (err error) {
 	}
 
 	// Launch the GUI
+	uiDone := make(chan struct{})
 	if !config.Headless {
-		launchGui(config)
+		uiDone = launchGui(config)
 	}
 
 	if !server.IsRunning() {
@@ -143,6 +144,8 @@ func StartDaemon(config *wwConfig.WebWalletConfig) (err error) {
 		fmt.Println("Server was stopped, quitting...")
 	case <-sigChan:
 		fmt.Println("\rCaught stop signal, quitting...")
+	case <-uiDone:
+		fmt.Println("Browser was closed, quitting...")
 	}
 
 	// Close
