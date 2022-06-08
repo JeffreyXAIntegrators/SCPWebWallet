@@ -78,6 +78,7 @@ func buildHTTPRoutes() *httprouter.Router {
 		router.POST("/gui/explorer", explorerHandler)
 		router.POST("/gui/balance", balanceHandler)
 		router.POST("/gui/blockHeight", blockHeightHandler)
+		router.POST("/api/txHistoryPage", transactionHistoryJson)
 	}
 	return router
 }

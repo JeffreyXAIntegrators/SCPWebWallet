@@ -7,38 +7,18 @@
         </form>
       </div>
       <div class="inline-block">
-        <div id="is_last_page" class="&IS_LAST_PAGE;"/>
         <form class="inline-block" action="/gui?&CACHE_BUSTER;" method="post">
           <input type="hidden" name="session_id" value="&SESSION_ID;">
-          <input id="refresh_transactions" type="hidden" class="txid-button white" value="🔄">
+          <input id="refresh_transactions" type="submit" class="txid-button white" value="🔄">
         </form>
-        <script>document.getElementById("refresh_transactions").type="submit"</script>
       </div>
     </h2>
-    <div class="grid">
-      <ul class="row">
-        <h3 class="col-5 center no-wrap">
-          Transaction ID
-        </h3>
-        <li class="col-5 center no-wrap">
-          Type
-        </li>
-        <li class="col-5 center no-wrap">
-          Amount
-        </li>
-        <li class="col-5 center no-wrap">
-          Date
-        </li>
-        <li class="col-5 center no-wrap">
-          Confirmed
-        </li>
-      </ul>
-      &TRANSACTION_HISTORY_LINES;
-    </div>
+    <div id="tx_history_page" class="grid"></div>
     <h3 class="center blue-bg">
       <form action="/gui/setTxHistoryPage?&CACHE_BUSTER;" method="post">
         <input type="hidden" name="session_id" value="&SESSION_ID;">
-        Page <select name='page'>&TRANSACTION_HISTORY_PAGE;</select> of &TRANSACTION_HISTORY_PAGES;
+          Page <select id="tx_history_pages" name="page">&TRANSACTION_HISTORY_PAGE;</select> of <font id="tx_history_page_count"></font>
         <input type="submit" value="Go">
       </form>
     </h3>
+    <script>refreshTxHistoryPage("&SESSION_ID;")</script>

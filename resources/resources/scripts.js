@@ -16,6 +16,104 @@ function uploadConsensusSet() {
   xhr.open("POST", formElement.action);
   xhr.send(new FormData(formElement));
 }
+var txHistoryPageLines = []
+function populateTxHistoryPage(json, sessionID) {
+  var txHistoryPageElement = document.getElementById("tx_history_page")
+  if (typeof(txHistoryPageElement) == 'undefined' || txHistoryPageElement == null) {
+    return
+  }
+  if (json.length === 0) {
+    return
+  }
+  if (txHistoryPageLines.length !== 0 
+    && txHistoryPageLines[0].transaction_id === json[0].lines.transaction_id 
+    && txHistoryPageLines[0].confirmed == json[0].lines.confirmed) {
+    return
+  }
+  txHistoryPage = json.lines
+  var cacheBuster = self.crypto.randomUUID()
+  var txHistoryPageHtml = `
+<ul class="row">
+  <h3 class="col-5 center no-wrap">
+    Transaction ID
+  </h3>
+  <li class="col-5 center no-wrap">
+    Type
+  </li>
+  <li class="col-5 center no-wrap">
+    Amount
+  </li>
+  <li class="col-5 center no-wrap">
+    Date
+  </li>
+  <li class="col-5 center no-wrap">
+    Confirmed
+  </li>
+</ul>
+`
+  for (const line of txHistoryPage) {
+    txHistoryPageHtml = txHistoryPageHtml + `
+<ul class="row">
+  <h3 class="col-5 center no-wrap monospace white-underline pad-col">
+    <form class="inline-block input-wide" action="/gui/explorer?${cacheBuster}" method="post">
+      <input type="hidden" name="session_id" value="${sessionID}">
+      <input type="hidden" name="transaction_id" value="${line.transaction_id}">
+      <input class="txid-button" type="submit" value="${line.short_transaction_id}">
+    </form>
+  </h3>
+  <li class="col-5 center no-wrap white-underline pad-col">
+    ${line.type}
+  </li>
+  <li class="col-5 center no-wrap white-underline pad-col">
+    ${line.amount}
+  </li>
+  <li class="col-5 center no-wrap white-underline pad-col">
+    ${line.time}
+  </li>
+  <li class="col-5 center no-wrap white-underline pad-col">
+    ${line.confirmed}
+  </li>
+</ul>
+`
+  }
+  txHistoryPageElement.innerHTML = txHistoryPageHtml
+  var txHistoryPageCountElement = document.getElementById("tx_history_page_count")
+  if (typeof(txHistoryPageCountElement) != 'undefined' && txHistoryPageCountElement != null) {
+    txHistoryPageCountElement.innerHTML = json.total
+  }
+  var txHistoryPagesElement = document.getElementById("tx_history_pages")
+  if (typeof(txHistoryPagesElement) == 'undefined' || txHistoryPagesElement == null) {
+    return
+  }
+  var txHistoryPagesHtml = ""
+  for (var i = 0; i < json.total; i++) {
+    var selected = ""
+    if (i + 1 == json.current) {
+      selected = "selected"
+    }
+    txHistoryPagesHtml = txHistoryPagesHtml + `<option ${selected} value='${i + 1}'>${i + 1}</option>`
+  }
+  txHistoryPagesElement.innerHTML = txHistoryPagesHtml
+}
+function refreshTxHistoryPage(sessionID) {
+  var txHistoryPageElement = document.getElementById("tx_history_page")
+  if (typeof(txHistoryPageElement) != 'undefined' && txHistoryPageElement != null) {
+    var data = new FormData();
+    data.append("session_id", sessionID)
+    fetch("/api/txHistoryPage", {method: "POST", body: data})
+      .then(response => response.json())
+      .then(result => {
+        populateTxHistoryPage(result, sessionID)
+        setTimeout(() => {refreshTxHistoryPage(sessionID);}, 60000); // 1 minute in milliseconds
+      })
+      .catch(error => {
+        console.error("Error:", error);
+        setTimeout(() => {refreshTxHistoryPage(sessionID);}, 1000);
+      })
+  } else {
+    setTimeout(() => {refreshTxHistoryPage(sessionID);}, 50);
+  }
+}
 function refreshBlockHeight(sessionID) {
   if (document.getElementsByClassName('block_height').length > 0) {
     var data = new FormData();
@@ -48,16 +146,7 @@ function refreshBlockHeight(sessionID) {
         console.error("Error:", error);
         setTimeout(() => {refreshBlockHeight(sessionID);}, 1000);
       })
-  } else {
-    setTimeout(() => {refreshBlockHeight(sessionID);}, 50);
   }
-}
-function isLastPage() {
-  var isLastPageElement = document.getElementById("is_last_page")
-  if (typeof(isLastPageElement) != 'undefined' && isLastPageElement != null) {
-    return isLastPageElement.className === "true";
-  }
-  return false;
 }
 function refreshBalance(sessionID) {
   var balance = document.getElementById("balance");
@@ -71,12 +160,6 @@ function refreshBalance(sessionID) {
           element.innerHTML = result[0];
         }
         for (const element of document.getElementsByClassName("unconfirmed")){
-          if (isLastPage() && element.innerHTML.trim() !== result[1].trim()) {
-            var refreshTransactions = document.getElementById("refresh_transactions")
-            if (typeof(refreshTransactions) != 'undefined' && refreshTransactions != null) {
-              refreshTransactions.submit()
-            }
-          }
           element.innerHTML = result[1];
         }
         for (const element of document.getElementsByClassName("spf_funds")){
