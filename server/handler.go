@@ -1321,7 +1321,9 @@ func transactionHistoryHelper(wallet modules.Wallet, sessionID string) (string, 
 	if err != nil {
 		return "", -1, err
 	}
-	for _, txn := range sts {
+	// iterate in reverse
+	for i := len(sts) - 1; i >= 0; i-- {
+		txn := sts[i]
 		// Format transaction type
 		isSetup := txn.Type == "SETUP" && txn.Scp == fmt.Sprintf("%15.2f SCP", float64(0))
 		if !isSetup {
