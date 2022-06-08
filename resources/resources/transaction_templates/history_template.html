@@ -1,6 +1,12 @@
     <h2 class="center blue-bg">
       Transactions
       <div class="inline-block">
+        <form class="inline-block" action="/gui/export" method="post">
+          <input type="hidden" name="session_id" value="&SESSION_ID;">
+          <input type="submit" class="txid-button white" value="💾">
+        </form>
+      </div>
+      <div class="inline-block">
         <div id="is_last_page" class="&IS_LAST_PAGE;"/>
         <form class="inline-block" action="/gui?&CACHE_BUSTER;" method="post">
           <input type="hidden" name="session_id" value="&SESSION_ID;">
