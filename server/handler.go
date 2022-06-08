@@ -959,27 +959,8 @@ func guiHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
 }
 
 func writeWallet(w http.ResponseWriter, wallet modules.Wallet, sessionID string) {
-	transactionHistoryLines, pages, err := transactionHistoryHelper(wallet, sessionID)
-	if err != nil {
-		msg := fmt.Sprintf("Unable to generate transaction history: %v", err)
-		writeError(w, msg, sessionID)
-		return
-	}
 	html := resources.WalletHTMLTemplate()
 	html = strings.Replace(html, "&TRANSACTION_PORTAL;", resources.TransactionsHistoryHTMLTemplate(), -1)
-	html = strings.Replace(html, "&TRANSACTION_HISTORY_LINES;", transactionHistoryLines, -1)
-	options := ""
-	for i := 0; i < pages+1; i++ {
-		selected := ""
-		if i+1 == getTxHistoryPage(sessionID) {
-			selected = "selected"
-		}
-		options = fmt.Sprintf("<option %s value='%d'>%d</option>", selected, i+1, i+1) + options
-	}
-	isLastPage := getTxHistoryPage(sessionID) == pages+1
-	html = strings.Replace(html, "&TRANSACTION_HISTORY_PAGE;", options, -1)
-	html = strings.Replace(html, "&TRANSACTION_HISTORY_PAGES;", strconv.Itoa(pages+1), -1)
-	html = strings.Replace(html, "&IS_LAST_PAGE;", strconv.FormatBool(isLastPage), -1)
 	writeHTML(w, html, sessionID)
 }
 
@@ -1301,8 +1282,40 @@ func transactionExplorerHelper(txn modules.ProcessedTransaction) (string, error)
 	return html, nil
 }
 
-func transactionHistoryHelper(wallet modules.Wallet, sessionID string) (string, int, error) {
-	html := ""
+type TransactionHistoryPage struct {
+	TransactionHistoryLines []TransactionHistoryLine `json:"lines"`
+	Current                 int                      `json:"current"`
+	Total                   int                      `json:"total"`
+}
+
+type TransactionHistoryLine struct {
+	TransactionID      string `json:"transaction_id"`
+	ShortTransactionID string `json:"short_transaction_id"`
+	Type               string `json:"type"`
+	Time               string `json:"time"`
+	Amount             string `json:"amount"`
+	Confirmed          string `json:"confirmed"`
+}
+
+func transactionHistoryJson(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
+	msgPrefix := "Unable to generate transaction history: "
+	sessionID := req.FormValue("session_id")
+	if sessionID == "" || !sessionIDExists(sessionID) {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(msgPrefix + "no session ID"))
+		return
+	}
+	if !sessionIDExists(sessionID) {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(msgPrefix + "invalid session ID"))
+		return
+	}
+	wallet, err := getWallet(sessionID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprintf(msgPrefix+"%v", err)))
+		return
+	}
 	page := getTxHistoryPage(sessionID)
 	pageSize := 20
 	pageMin := (page - 1) * pageSize
@@ -1311,16 +1324,23 @@ func transactionHistoryHelper(wallet modules.Wallet, sessionID string) (string, 
 	heightMin := 0
 	confirmedTxns, err := wallet.Transactions(types.BlockHeight(heightMin), n.ConsensusSet.Height())
 	if err != nil {
-		return "", -1, err
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprintf(msgPrefix+"%v", err)))
+		return
 	}
 	unconfirmedTxns, err := wallet.UnconfirmedTransactions()
 	if err != nil {
-		return "", -1, err
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprintf(msgPrefix+"%v", err)))
+		return
 	}
 	sts, err := ComputeSummarizedTransactions(append(confirmedTxns, unconfirmedTxns...), n.ConsensusSet.Height())
 	if err != nil {
-		return "", -1, err
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprintf(msgPrefix+"%v", err)))
+		return
 	}
+	lines := []TransactionHistoryLine{}
 	// iterate in reverse
 	for i := len(sts) - 1; i >= 0; i-- {
 		txn := sts[i]
@@ -1333,18 +1353,30 @@ func transactionHistoryHelper(wallet modules.Wallet, sessionID string) (string, 
 				if txn.Spf != "" {
 					fmtAmount = fmtAmount + "; " + txn.Spf
 				}
-				row := resources.TransactionHistoryLineHTMLTemplate()
-				row = strings.Replace(row, "&TRANSACTION_ID;", txn.TxnID, -1)
-				row = strings.Replace(row, "&SHORT_TRANSACTION_ID;", txn.TxnID[0:16]+"..."+txn.TxnID[len(txn.TxnID)-16:], -1)
-				row = strings.Replace(row, "&TYPE;", txn.Type, -1)
-				row = strings.Replace(row, "&TIME;", txn.Time, -1)
-				row = strings.Replace(row, "&AMOUNT;", fmtAmount, -1)
-				row = strings.Replace(row, "&CONFIRMED;", txn.Confirmed, -1)
-				html = html + row
+				line := TransactionHistoryLine{}
+				line.TransactionID = txn.TxnID
+				line.ShortTransactionID = txn.TxnID[0:16] + "..." + txn.TxnID[len(txn.TxnID)-16:]
+				line.Type = txn.Type
+				line.Time = txn.Time
+				line.Amount = fmtAmount
+				line.Confirmed = txn.Confirmed
+				lines = append(lines, line)
 			}
 		}
 	}
-	return html, count / pageSize, nil
+	txHistoryPage := TransactionHistoryPage{}
+	txHistoryPage.TransactionHistoryLines = lines
+	txHistoryPage.Current = page
+	txHistoryPage.Total = (count / pageSize) + 1
+	json, err := json.Marshal(txHistoryPage)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprintf(msgPrefix+"%v", err)))
+		return
+	}
+	w.Header().Set("Content-Type", "application/javascript; charset=utf-8")
+	w.Header().Set("Content-Length", strconv.Itoa(len(json))) //len(dec)
+	w.Write(json)
 }
 
 // scanAddress scans a types.UnlockHash from a string.
