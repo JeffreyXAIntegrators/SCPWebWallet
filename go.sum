@@ -502,6 +502,8 @@ gitlab.com/scpcorp/ScPrime v1.6.1-0.20220216193203-736f7cf69e5c h1:Ao6gJyMBPgT3q
 gitlab.com/scpcorp/ScPrime v1.6.1-0.20220216193203-736f7cf69e5c/go.mod h1:Cja6c3xNuqWWSrbut2HldFQCl8rZ9FUWF4TXWKjE4h8=
 gitlab.com/scpcorp/ScPrime v1.6.2 h1:A+B6QH9tLgCVg7Kn9pC8CahM6qxcsqBqks0vIK9R+Ew=
 gitlab.com/scpcorp/ScPrime v1.6.2/go.mod h1:NuG9qPRhHrSugyUKJ/i9rWzEuqKutq0SWmhskR4i/uA=
+gitlab.com/scpcorp/ScPrime v1.6.3 h1:Umz7MvF3rO1NsbubN/0Ojt93F3UEiejh84QkedGeZlU=
+gitlab.com/scpcorp/ScPrime v1.6.3/go.mod h1:NuG9qPRhHrSugyUKJ/i9rWzEuqKutq0SWmhskR4i/uA=
 gitlab.com/scpcorp/merkletree v0.0.0-20211011120743-60ebb43e826e h1:KMC6yO4kumUkU8LEdq0BZ6fnRbb0Du9KrOr0Qam/ytY=
 gitlab.com/scpcorp/merkletree v0.0.0-20211011120743-60ebb43e826e/go.mod h1:3CWUfXmsEjKSv7z1ReNQzdDEl1Qg4FTYXWQf72D5Zxw=
 gitlab.com/scpcorp/merkletree v0.0.0-20220107002940-1145778ea123 h1:AqLMGcDTreQkAm4Vh1H4r335UN5FtolMHk/9kItWU78=

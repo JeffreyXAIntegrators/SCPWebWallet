@@ -93,6 +93,9 @@ var scanningWalletForm string
 //go:embed resources/forms/send_coins.html
 var sendCoinsForm string
 
+//go:embed resources/forms/multi_send_coins.html
+var multiSendCoinsForm string
+
 //go:embed resources/forms/receive_coins_form.html
 var receiveCoinsForm string
 
@@ -254,6 +257,11 @@ func ScanningWalletForm() string {
 // SendCoinsForm returns the send coins form
 func SendCoinsForm() string {
 	return sendCoinsForm
+}
+
+// MultiSendCoinsForm returns the miltisend coins form
+func MultiSendCoinsForm() string {
+	return multiSendCoinsForm
 }
 
 // ReceiveCoinsForm returns the receive coins form

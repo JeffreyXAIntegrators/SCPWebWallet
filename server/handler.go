@@ -3,6 +3,7 @@ package server
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/csv"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -801,6 +802,130 @@ func buildingConsensusSetHandler(w http.ResponseWriter, req *http.Request, _ htt
 	writeStaticHTML(w, html, "")
 }
 
+func uploadMultispendCsvFormHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
+	sessionID := req.FormValue("session_id")
+	if sessionID == "" || !sessionIDExists(sessionID) {
+		msg := "Session ID does not exist."
+		writeError(w, msg, "")
+	}
+	title := "MULTISEND FROM CSV"
+	form := resources.MultiSendCoinsForm()
+	writeForm(w, title, form, sessionID)
+}
+
+func uploadMultispendCsvHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
+	sessionID := req.FormValue("session_id")
+	if sessionID == "" || !sessionIDExists(sessionID) {
+		msg := "Session ID does not exist."
+		writeError(w, msg, "")
+	}
+	cancel := req.FormValue("cancel")
+	var msgPrefix = "Unable to send coins: "
+	if cancel == "true" {
+		guiHandler(w, req, nil)
+		return
+	}
+	file, _, err := req.FormFile("file")
+	if err != nil {
+		msg := fmt.Sprintf("%s%s%v", msgPrefix, "Unable to upload multispend csv file: ", err)
+		writeError(w, msg, sessionID)
+		return
+	}
+	lines, err := csv.NewReader(file).ReadAll()
+	err = file.Close()
+	if err != nil {
+		msg := fmt.Sprintf("%s%s%v", msgPrefix, "Failed to close the multispend csv upload stream: ", err)
+		writeError(w, msg, sessionID)
+		return
+	}
+	var coinOutputs []types.SiacoinOutput
+	var fundOutputs []types.SiafundOutput
+	for _, line := range lines {
+		if line == nil {
+			continue
+		}
+		amount := line[0]
+		if amount == "" {
+			continue
+		}
+		dest := line[1]
+		if dest == "" {
+			continue
+		}
+		value, err := types.NewCurrencyStr(amount)
+		if err != nil {
+			msg := fmt.Sprintf("%s%s%v", msgPrefix, "Could not parse amount: ", err)
+			writeError(w, msg, sessionID)
+			return
+		}
+		var hash types.UnlockHash
+		if _, err := fmt.Sscan(dest, &hash); err != nil {
+			msg := fmt.Sprintf("%s%s%v", msgPrefix, "Failed to parse destination address: ", err)
+			writeError(w, msg, sessionID)
+			return
+		}
+		if strings.HasSuffix(amount, "SPF") {
+			var output types.SiafundOutput
+			output.Value = value
+			output.UnlockHash = hash
+			fundOutputs = append(fundOutputs, output)
+		} else {
+			var output types.SiacoinOutput
+			output.Value = value
+			output.UnlockHash = hash
+			coinOutputs = append(coinOutputs, output)
+		}
+	}
+	if len(coinOutputs) == 0 && len(fundOutputs) == 0 {
+		msg := fmt.Sprintf("%s%s%v", msgPrefix, "No ScPrime outputs were supplied: ", err)
+		writeError(w, msg, sessionID)
+		return
+	}
+	wallet, err := getWallet(sessionID)
+	if err != nil {
+		msg := fmt.Sprintf("%s%v", msgPrefix, err)
+		writeError(w, msg, sessionID)
+		return
+	}
+	unlocked, err := wallet.Unlocked()
+	if err != nil {
+		msg := fmt.Sprintf("%s%v", msgPrefix, err)
+		writeError(w, msg, sessionID)
+		return
+	}
+	if !unlocked {
+		msg := msgPrefix + "Wallet is locked."
+		writeError(w, msg, sessionID)
+		return
+	}
+	// Mock the transaction to verify that the wallet is able to fund both transactions.
+	txnBuilder, err := wallet.BuildUnsignedBatchTransaction(coinOutputs, fundOutputs)
+	if err != nil {
+		msg := fmt.Sprintf("%s%v", msgPrefix, err)
+		writeError(w, msg, sessionID)
+		return
+	}
+	txnBuilder.Drop()
+	// Send the transactions
+	if len(coinOutputs) != 0 {
+		_, err = wallet.SendBatchTransaction(coinOutputs, nil)
+		if err != nil {
+			msg := fmt.Sprintf("%s%v", msgPrefix, err)
+			writeError(w, msg, sessionID)
+			return
+		}
+	}
+	if len(fundOutputs) != 0 {
+		_, err = wallet.SendBatchTransaction(nil, fundOutputs)
+		if err != nil {
+			msg := fmt.Sprintf("%s%v", msgPrefix, err)
+			writeError(w, msg, sessionID)
+			return
+		}
+	}
+	guiHandler(w, req, nil)
+}
+
 func uploadConsensusSetFormHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
 	writeStaticHTML(w, resources.ConsensusSetUploadingHTML(), "")
 }
@@ -841,7 +966,7 @@ func uploadConsensusSetHandler(w http.ResponseWriter, req *http.Request, _ httpr
 	}
 	err = file.Close()
 	if err != nil {
-		msg := fmt.Sprintf("Failed to close the consensus set uplload stream after writing: %v", err)
+		msg := fmt.Sprintf("Failed to close the consensus set upload stream after writing: %v", err)
 		writeError(w, msg, "")
 		return
 	}
