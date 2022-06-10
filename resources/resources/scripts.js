@@ -108,7 +108,7 @@ function refreshTxHistoryPage(sessionID) {
       })
       .catch(error => {
         console.error("Error:", error);
-        setTimeout(() => {refreshTxHistoryPage(sessionID);}, 1000);
+        setTimeout(() => {refreshTxHistoryPage(sessionID);}, 1000); // 1 second in milliseconds
       })
   } else {
     setTimeout(() => {refreshTxHistoryPage(sessionID);}, 50);
@@ -140,11 +140,15 @@ function refreshBlockHeight(sessionID) {
         for (const element of document.getElementsByClassName("status")){
           element.className="status " + color
         }
-        setTimeout(() => {refreshBlockHeight(sessionID);}, 60000); // 1 minute in milliseconds
+        if (status === "Synchronized") {
+          setTimeout(() => {refreshBlockHeight(sessionID);}, 60000); // 1 minute in milliseconds
+        } else {
+          setTimeout(() => {refreshBlockHeight(sessionID);}, 1000); // 1 second in milliseconds
+        }
       })
       .catch(error => {
         console.error("Error:", error);
-        setTimeout(() => {refreshBlockHeight(sessionID);}, 1000);
+        setTimeout(() => {refreshBlockHeight(sessionID);}, 60000); // 1 minute in milliseconds
       })
   }
 }
@@ -177,7 +181,7 @@ function refreshBalance(sessionID) {
       })
       .catch(error => {
         console.error("Error:", error);
-        setTimeout(() => {refreshBalance(sessionID);}, 1000);
+        setTimeout(() => {refreshBalance(sessionID);}, 60000); // 1 minute in milliseconds
       })
   } else {
     setTimeout(() => {refreshBalance(sessionID);}, 50);
@@ -199,11 +203,11 @@ function refreshBootstrapperProgress() {
         for (const element of document.getElementsByClassName("bootstrapper-progress")){
           element.innerHTML = status;
         }
-        setTimeout(() => {refreshBootstrapperProgress();}, 1000);
+        setTimeout(() => {refreshBootstrapperProgress();}, 1000); // 1 second in milliseconds
       })
       .catch(error => {
         console.error("Error:", error);
-        setTimeout(() => {refreshBootstrapperProgress();}, 1000);
+        setTimeout(() => {refreshBootstrapperProgress();}, 1000); // 1 second in milliseconds
       })
   } else {
     setTimeout(() => {refreshBootstrapperProgress();}, 50);
@@ -225,11 +229,11 @@ function refreshConsensusBuilderProgress() {
         for (const element of document.getElementsByClassName("consensus-builder-progress")){
           element.innerHTML = status;
         }
-        setTimeout(() => {refreshConsensusBuilderProgress();}, 1000);
+        setTimeout(() => {refreshConsensusBuilderProgress();}, 1000); // 1 second in milliseconds
       })
       .catch(error => {
         console.error("Error:", error);
-        setTimeout(() => {refreshConsensusBuilderProgress();}, 1000);
+        setTimeout(() => {refreshConsensusBuilderProgress();}, 1000); // 1 second in milliseconds
       })
   } else {
     setTimeout(() => {refreshConsensusBuilderProgress();}, 50);
