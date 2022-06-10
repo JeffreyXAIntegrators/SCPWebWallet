@@ -1,0 +1,21 @@
+<div>
+  Send ScPrime coins and funds to multiple addresses in the same transaction as defined in the supplied CSV file.
+  The first column must be the amount of ScPrime coins or funds to send specified in units, e.g. 1.23KS or 30SPF.  Run 'wallet
+  for a list of other units. If an unit is supplied, hastinds will be assumed. The second column must be the 76-byte
+  hexadecimal address.
+</div>
+<div>
+  A dynamic transaction fee is applied depending on the size of the transaction and how busy the network is.
+</div>
+<form action="/gui/uploadMultispendCsv?&CACHE_BUSTER;" method="post" enctype="multipart/form-data">
+  <input type="hidden" name="session_id" value="&SESSION_ID;">
+  <div class='pad'>CSV: <input name="file" type="file" multiple /></div>
+  <div class='pad blue-dashed'>
+    <div class="inline-block">
+      <button type="submit">Send Coins</button>
+    </div>
+    <div class="inline-block">
+      <button name="cancel" value="true" type="submit">Cancel</button>
+    </div>
+  </div>
+</form>
