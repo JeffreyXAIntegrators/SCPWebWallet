@@ -96,6 +96,13 @@ function populateTxHistoryPage(json, sessionID) {
   txHistoryPagesElement.innerHTML = txHistoryPagesHtml
 }
 function refreshTxHistoryPage(sessionID) {
+  var storedTxHistoryPageLinesKey = sessionID + "_storedTxHistoryPageLines"
+  var storedTxHistoryPageLines = JSON.parse(localStorage.getItem(storedTxHistoryPageLinesKey) || "null");
+  if (storedTxHistoryPageLines != null) {
+    populateTxHistoryPage(storedTxHistoryPageLines, sessionID)
+  } else {
+    localStorage.clear();
+  }
   var txHistoryPageElement = document.getElementById("tx_history_page")
   if (typeof(txHistoryPageElement) != 'undefined' && txHistoryPageElement != null) {
     var data = new FormData();
@@ -104,6 +111,7 @@ function refreshTxHistoryPage(sessionID) {
       .then(response => response.json())
       .then(result => {
         populateTxHistoryPage(result, sessionID)
+        localStorage.setItem(storedTxHistoryPageLinesKey, JSON.stringify(result));
         setTimeout(() => {refreshTxHistoryPage(sessionID);}, 60000); // 1 minute in milliseconds
       })
       .catch(error => {
