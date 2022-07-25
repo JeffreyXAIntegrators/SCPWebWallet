@@ -6,7 +6,7 @@ require (
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/viper v1.10.1
 	gitlab.com/NebulousLabs/errors v0.0.0-20200929122200-06c536cf6975
-	gitlab.com/scpcorp/ScPrime v1.6.3
+	gitlab.com/scpcorp/ScPrime v1.6.6
 	golang.org/x/crypto v0.0.0-20220321153916-2c7772ba3064
 )
 
