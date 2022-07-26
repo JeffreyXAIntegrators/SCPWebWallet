@@ -11,6 +11,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/ncruces/zenity"
+
 	"gitlab.com/scpcorp/webwallet/build"
 	"gitlab.com/scpcorp/webwallet/modules/browserconfig"
 	"gitlab.com/scpcorp/webwallet/modules/launcher"
@@ -185,9 +187,19 @@ func StartDaemon(config *wwConfig.WebWalletConfig) error {
 	}
 
 	// Close
+	var shutdownGui zenity.ProgressDialog
+	if !config.Headless {
+		title := "Shutting Down ScPrime Web Wallet"
+		shutdownGui, _ = zenity.Progress(zenity.Title(title), zenity.Pulsate())
+		shutdownGui.Text("Closing node...")
+	}
 	server.CloseAllWallets()
 	if node != nil {
 		closeNode(node, config)
+	}
+	if shutdownGui != nil {
+		shutdownGui.Complete()
+		shutdownGui.Close()
 	}
 	return nil
 }
