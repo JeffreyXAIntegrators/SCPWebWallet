@@ -45,7 +45,7 @@ func StartHTTPServer(webWalletConfig *wwConfig.WebWalletConfig) {
 	config = webWalletConfig
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
-	srv = &http.Server{Addr: ":4300", Handler: buildHTTPRoutes()}
+	srv = &http.Server{Addr: fmt.Sprintf(":%d", webWalletConfig.Port), Handler: buildHTTPRoutes()}
 	go func() {
 		defer wg.Done()
 		if err := srv.ListenAndServe(); err != http.ErrServerClosed {

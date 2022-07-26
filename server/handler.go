@@ -43,6 +43,12 @@ func redirect(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
 	http.Redirect(w, req, "/", http.StatusMovedPermanently)
 }
 
+func optionsHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
+	w.Header().Set("Content-Type", "text/plain;charset=utf-8")
+	w.Header().Set("Content-Length", "0")
+	w.Header().Set("Application", "ScPrime Web Wallet")
+}
+
 func faviconHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
 	var favicon = resources.Favicon()
 	w.Header().Set("Content-Type", "image/x-icon")

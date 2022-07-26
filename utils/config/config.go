@@ -12,6 +12,7 @@ type WebWalletConfig struct {
 	CreateWallet                  bool
 	Bootstrap                     bool
 	Headless                      bool
+	Port                          int
 	Dir                           string
 	CheckTokenExpirationFrequency time.Duration
 }
