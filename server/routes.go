@@ -12,6 +12,7 @@ func buildHTTPRoutes() *httprouter.Router {
 	router.RedirectTrailingSlash = false
 
 	//GUI Calls
+	router.OPTIONS("/", optionsHandler)
 	router.GET("/favicon.ico", faviconHandler)
 	router.GET("/gui/bootstrapperProgress", bootstrapperProgressHandler)
 	router.GET("/gui/consensusBuilderProgress", consensusBuilderProgressHandler)

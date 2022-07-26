@@ -26,6 +26,7 @@ var (
 		CreateWallet:                  true,
 		Bootstrap:                     true, // set to true when the gateway should use the bootstrap peer list
 		Headless:                      true,
+		Port:                          4300,
 		Dir:                           build.ScPrimeWebWalletDir(),
 		CheckTokenExpirationFrequency: 1 * time.Hour, // default
 	}
@@ -33,8 +34,8 @@ var (
 
 // die prints its arguments to stderr, then exits the program with the default
 // error code.
-func die(args ...interface{}) {
-	fmt.Fprintln(os.Stderr, args...)
+func die(err error) {
+	fmt.Println(err)
 	os.Exit(exitCodeGeneral)
 }
 

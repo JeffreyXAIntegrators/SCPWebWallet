@@ -2,9 +2,12 @@ package daemon
 
 import (
 	"fmt"
+	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -89,35 +92,67 @@ func launchGui(config *wwConfig.WebWalletConfig) chan struct{} {
 	return launcher.Launch(browser)
 }
 
+func isPortAvailabile(config *wwConfig.WebWalletConfig) (bool, error) {
+	port := config.Port
+	url := "http://" + net.JoinHostPort("localhost", strconv.Itoa(port))
+	client := http.Client{Timeout: time.Duration(50) * time.Millisecond}
+	optReq, err := http.NewRequest("OPTIONS", url, nil)
+	if err != nil {
+		return false, err
+	}
+	res, err := client.Do(optReq)
+	if err == nil {
+		res.Body.Close()
+		for _, app := range res.Header.Values("Application") {
+			return false, fmt.Errorf("port %d already in use by %s", port, app)
+		}
+		return false, fmt.Errorf("port %d already in use", port)
+	}
+	res, err = http.Get(url)
+	if err == nil {
+		res.Body.Close()
+		for _, app := range res.Header.Values("Application") {
+			return false, fmt.Errorf("port %d already in use by %s", port, app)
+		}
+		return false, fmt.Errorf("port %d already in use", port)
+	}
+	return true, nil
+}
+
 // StartDaemon uses the config parameters to initialize modules and start the web wallet.
-func StartDaemon(config *wwConfig.WebWalletConfig) (err error) {
-	// Record startup time
+func StartDaemon(config *wwConfig.WebWalletConfig) error {
+
+	// record startup time
 	loadStart := time.Now()
 
 	// listen for kill signals
 	sigChan := installKillSignalHandler()
 
-	// Print the Version and GitRevision
+	// print the Version and GitRevision
 	printVersionAndRevision()
 
-	// Install a signal handler that will catch exceptions thrown by mmap'd
-	// files.
+	// install a signal handler that will catch exceptions thrown by mmap'd files
 	installMmapSignalHandler()
 
-	// Print a startup message.
-	fmt.Println("Loading ScPrime Web Wallet...")
+	// verify port is open
+	resp, err := isPortAvailabile(config)
+	if err != nil || !resp {
+		fmt.Printf("Port %d is not available, quitting...\n", config.Port)
+		return err
+	}
 
-	// Start Server
+	// start server
+	fmt.Println("Starting ScPrime Web Wallet server...")
 	server.StartHTTPServer(config)
 
-	// Start a node
+	// start a node
 	node := &node.Node{}
 	if server.IsRunning() {
 		go startNode(node, config, loadStart)
 	}
 
 	if server.IsRunning() {
-		// Block until node is started or 500 milliseconds has passed.
+		// block until node is started or 500 milliseconds has passed.
 		for i := 0; i < 100; i++ {
 			if node.TransactionPool == nil {
 				time.Sleep(5 * time.Millisecond)
@@ -125,18 +160,19 @@ func StartDaemon(config *wwConfig.WebWalletConfig) (err error) {
 		}
 	}
 
-	// Launch the GUI
+	// launch GUI
 	uiDone := make(chan struct{})
 	if !config.Headless {
 		uiDone = launchGui(config)
 	}
 
 	if !server.IsRunning() {
+		fmt.Println("Unable to start server, quitting...")
 		return nil
 	}
 
 	if config.Headless {
-		fmt.Println("SCP Web Wallet is running at http://localhost:4300")
+		fmt.Printf("SCP Web Wallet is running at http://localhost:%d\n", config.Port)
 	}
 
 	select {
