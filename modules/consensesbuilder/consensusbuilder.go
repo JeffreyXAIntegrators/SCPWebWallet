@@ -24,7 +24,6 @@ var status = ""
 
 // Close the consensus builder module
 func Close() {
-	fmt.Println("Closing consensusset builder...")
 	status = Closed
 }
 
