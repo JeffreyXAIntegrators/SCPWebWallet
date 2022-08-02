@@ -14,7 +14,6 @@ import (
 	"github.com/ncruces/zenity"
 
 	"gitlab.com/scpcorp/webwallet/build"
-	"gitlab.com/scpcorp/webwallet/modules/browserconfig"
 	"gitlab.com/scpcorp/webwallet/modules/launcher"
 	"gitlab.com/scpcorp/webwallet/server"
 	wwConfig "gitlab.com/scpcorp/webwallet/utils/config"
@@ -84,14 +83,18 @@ func startNode(node *node.Node, config *wwConfig.WebWalletConfig, loadStart time
 	return
 }
 
-func launchGui(config *wwConfig.WebWalletConfig) chan struct{} {
+func launchGui(config *wwConfig.WebWalletConfig) (chan struct{}, error) {
 	dir, err := filepath.Abs(config.Dir)
 	if err != nil {
 		fmt.Printf("unable to launch GUI: %v\n", err)
-		return nil
+		return nil, err
 	}
-	browser, _ := browserconfig.Browser(dir)
-	return launcher.Launch(browser)
+	browserConfig := filepath.Join(dir, "browser", "browser.txt")
+	browser, err := os.ReadFile(browserConfig)
+	if err != nil {
+		return nil, err
+	}
+	return launcher.Launch(string(browser)), nil
 }
 
 func isPortAvailabile(config *wwConfig.WebWalletConfig) (bool, error) {
@@ -165,7 +168,10 @@ func StartDaemon(config *wwConfig.WebWalletConfig) error {
 	// launch GUI
 	uiDone := make(chan struct{})
 	if !config.Headless {
-		uiDone = launchGui(config)
+		uiDone, err = launchGui(config)
+		if err != nil {
+			return err
+		}
 	}
 
 	if !server.IsRunning() {
