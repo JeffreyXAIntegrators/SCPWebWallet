@@ -48,9 +48,6 @@ var errorHTMLTemplate string
 //go:embed resources/privacy_template.html
 var privacyHTMLTemplate string
 
-//go:embed resources/transaction_templates/history_line_template.html
-var transactionHistoryLineHTMLTemplate string
-
 //go:embed resources/transaction_templates/history_template.html
 var transactionsHistoryHTMLTemplate string
 
@@ -176,11 +173,6 @@ func ErrorHTMLTemplate() string {
 // PrivacyHTMLTemplate returns the privacy html template
 func PrivacyHTMLTemplate() string {
 	return privacyHTMLTemplate
-}
-
-// TransactionHistoryLineHTMLTemplate returns an HTML template
-func TransactionHistoryLineHTMLTemplate() string {
-	return transactionHistoryLineHTMLTemplate
 }
 
 // TransactionsHistoryHTMLTemplate returns an HTML template
