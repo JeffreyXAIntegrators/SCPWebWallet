@@ -34,44 +34,51 @@ function populateTxHistoryPage(json, sessionID) {
   var cacheBuster = self.crypto.randomUUID()
   var txHistoryPageHtml = `
 <ul class="row">
-  <h3 class="col-5 center no-wrap">
+  <h3 class="col-6 center no-wrap">
     Transaction ID
   </h3>
-  <li class="col-5 center no-wrap">
+  <li class="col-6 center no-wrap">
     Type
   </li>
-  <li class="col-5 center no-wrap">
+  <li class="col-6 center no-wrap">
     Amount
   </li>
-  <li class="col-5 center no-wrap">
+  <li class="col-6 center no-wrap">
     Date
   </li>
-  <li class="col-5 center no-wrap">
+  <li class="col-6 center no-wrap">
     Confirmed
+  </li>
+  <li class="col-6 center no-wrap">
+    Notes
   </li>
 </ul>
 `
   for (const line of txHistoryPage) {
+    const note = localStorage.getItem('note-'+line.short_transaction_id)
     txHistoryPageHtml = txHistoryPageHtml + `
 <ul class="row">
-  <h3 class="col-5 center no-wrap monospace white-underline pad-col">
+  <h3 class="col-6 center no-wrap monospace white-underline pad-col">
     <form class="inline-block input-wide" action="/gui/explorer?${cacheBuster}" method="post">
       <input type="hidden" name="session_id" value="${sessionID}">
       <input type="hidden" name="transaction_id" value="${line.transaction_id}">
       <input class="txid-button" type="submit" value="${line.short_transaction_id}">
     </form>
   </h3>
-  <li class="col-5 center no-wrap white-underline pad-col">
+  <li class="col-6 center no-wrap white-underline pad-col">
     ${line.type}
   </li>
-  <li class="col-5 center no-wrap white-underline pad-col">
+  <li class="col-6 center no-wrap white-underline pad-col">
     ${line.amount}
   </li>
-  <li class="col-5 center no-wrap white-underline pad-col">
+  <li class="col-6 center no-wrap white-underline pad-col">
     ${line.time}
   </li>
-  <li class="col-5 center no-wrap white-underline pad-col">
+  <li class="col-6 center no-wrap white-underline pad-col">
     ${line.confirmed}
+  </li>
+  <li class="col-6 center no-wrap white-underline pad-col">
+    <input type="text" onchange="localStorage.setItem('note-${line.short_transaction_id}', this.value)" value="${note!==null?note:''}">
   </li>
 </ul>
 `
@@ -101,7 +108,12 @@ function refreshTxHistoryPage(sessionID) {
   if (storedTxHistoryPageLines != null) {
     populateTxHistoryPage(storedTxHistoryPageLines, sessionID)
   } else {
-    localStorage.clear();
+    for (var i = 0; i < localStorage.length; i++){
+      let key = localStorage.key(i)
+      if (key.endsWith("_storedTxHistoryPageLines")) {
+        localStorage.removeItem(key)
+      }
+    }
   }
   var txHistoryPageElement = document.getElementById("tx_history_page")
   if (typeof(txHistoryPageElement) != 'undefined' && txHistoryPageElement != null) {
