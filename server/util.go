@@ -51,18 +51,21 @@ type SummarizedTransaction struct {
 
 // ComputeSummarizedTransactions creates a set of SummarizedTransactions
 // from a set of ProcessedTransactions.
-func ComputeSummarizedTransactions(pts []modules.ProcessedTransaction, blockHeight types.BlockHeight) ([]SummarizedTransaction, error) {
+func ComputeSummarizedTransactions(pts []modules.ProcessedTransaction, blockHeight types.BlockHeight, w modules.Wallet) ([]SummarizedTransaction, error) {
 	sts := []SummarizedTransaction{}
 	vts, err := wallet.ComputeValuedTransactions(pts, blockHeight)
 	if err != nil {
 		return nil, err
 	}
+	utxos, _ := w.UnspentOutputs()
 	for _, txn := range vts {
+		isSpfTransfer := false
 		// Determine the number of outgoing coins and funds.
 		var outgoingFunds types.Currency
 		for _, input := range txn.Inputs {
 			if input.FundType == types.SpecifierSiafundInput && input.WalletAddress {
 				outgoingFunds = outgoingFunds.Add(input.Value)
+				isSpfTransfer = true
 			}
 		}
 		// Determine the number of incoming funds.
@@ -70,9 +73,9 @@ func ComputeSummarizedTransactions(pts []modules.ProcessedTransaction, blockHeig
 		for _, output := range txn.Outputs {
 			if output.FundType == types.SpecifierSiafundOutput && output.WalletAddress {
 				incomingFunds = incomingFunds.Add(output.Value)
+				isSpfTransfer = true
 			}
 		}
-		// Convert the scp to a float.
 		incomingCoinsFloat, _ := new(big.Rat).SetFrac(txn.ConfirmedIncomingValue.Big(), types.ScPrimecoinPrecision.Big()).Float64()
 		outgoingCoinsFloat, _ := new(big.Rat).SetFrac(txn.ConfirmedOutgoingValue.Big(), types.ScPrimecoinPrecision.Big()).Float64()
 		// Summarize transaction
@@ -85,16 +88,64 @@ func ComputeSummarizedTransactions(pts []modules.ProcessedTransaction, blockHeig
 		} else {
 			st.Confirmed = "No"
 		}
-		st.Scp = fmt.Sprintf("%15.2f SCP", incomingCoinsFloat-outgoingCoinsFloat)
 		// For funds, need to avoid having a negative types.Currency.
-		if incomingFunds.Cmp(outgoingFunds) > 0 {
-			st.Spf = fmt.Sprintf("%14v SPF %v\n", incomingFunds.Sub(outgoingFunds), txn.TxType)
+		if !isSpfTransfer {
+			st.Scp = fmt.Sprintf("%15.2f SCP", incomingCoinsFloat-outgoingCoinsFloat)
+		} else if incomingFunds.Cmp(outgoingFunds) > 0 {
+			st.Spf = fmt.Sprintf("%14v SPF", incomingFunds.Sub(outgoingFunds))
+			if incomingCoinsFloat-outgoingCoinsFloat > .009 || incomingCoinsFloat-outgoingCoinsFloat < -.009 {
+				st.Scp = fmt.Sprintf("%15.2f SCP", incomingCoinsFloat-outgoingCoinsFloat)
+			}
 		} else if incomingFunds.Cmp(outgoingFunds) < 0 {
-			st.Spf = fmt.Sprintf("-%14v SPF %v\n", outgoingFunds.Sub(incomingFunds), txn.TxType)
+			st.Spf = "-" + strings.TrimSpace(fmt.Sprintf("%14v SPF", outgoingFunds.Sub(incomingFunds)))
+			if incomingCoinsFloat-outgoingCoinsFloat > .009 || incomingCoinsFloat-outgoingCoinsFloat < -.009 {
+				st.Scp = fmt.Sprintf("%15.2f SCP", incomingCoinsFloat-outgoingCoinsFloat)
+			}
+		} else if isSpfTransfer {
+			var incomingClaims types.Currency
+			for _, input := range txn.Transaction.SiafundInputs {
+				incomingClaims = incomingClaims.Add(siaClaimOutputSum(input, txn.ConfirmationHeight, pts, utxos))
+			}
+			incomingClaimsFloat, _ := new(big.Rat).SetFrac(incomingClaims.Big(), types.ScPrimecoinPrecision.Big()).Float64()
+			txnTotalFloat := incomingClaimsFloat + incomingCoinsFloat - outgoingCoinsFloat
+			if incomingClaims.IsZero() && st.Type == "SETUP" {
+				st.Type = "COLLECT SPF REWARDS"
+				st.Scp = "IN PROGRESS"
+			} else if incomingClaims.IsZero() {
+				st.Type = "SETUP"
+				st.Scp = fmt.Sprintf("%15.2f SCP", float64(0))
+			} else {
+				st.Type = "COLLECT SPF REWARDS"
+				st.Scp = fmt.Sprintf("%15.8f SCP", txnTotalFloat)
+			}
 		}
 		sts = append(sts, st)
 	}
 	return sts, nil
+}
+
+// siaClaimOutputSum returns the sum of all the siacoin claim outputs created
+// when the siafund input is spent. The supplied floor defines the earliest
+// block that can contain a spent claim input. The supplied txns defines the
+// pool of spent transactions that might have spent the claim input. The
+// supplied utxos defines the pool of unspent outputs that might contain the
+// unspent claim input.
+func siaClaimOutputSum(input types.SiafundInput, floor types.BlockHeight, txns []modules.ProcessedTransaction, utxos []modules.UnspentOutput) types.Currency {
+	for _, unspent := range utxos {
+		if unspent.ID.String() == input.ParentID.SiaClaimOutputID().String() {
+			return unspent.Value
+		}
+	}
+	for _, txn := range txns {
+		if txn.ConfirmationHeight >= floor {
+			for _, spent := range txn.Inputs {
+				if spent.ParentID.String() == input.ParentID.SiaClaimOutputID().String() {
+					return spent.Value
+				}
+			}
+		}
+	}
+	return ZeroCurrency
 }
 
 // NewCurrencyStr creates a Currency value from a supplied string with unit suffix.

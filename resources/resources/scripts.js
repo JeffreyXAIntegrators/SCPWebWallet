@@ -189,6 +189,9 @@ function refreshBalance(sessionID) {
         for (const element of document.getElementsByClassName("spf_funds")){
           element.innerHTML = result[2];
         }
+        for (const element of document.getElementsByClassName("scp_claims")){
+          element.innerHTML = result[3];
+        }
         var whaleSize = document.getElementById("whale_size")
         if (typeof(whaleSize) != 'undefined' && whaleSize != null) {
           whaleSize.innerHTML = "Whale Size: " + result[4];
