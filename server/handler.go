@@ -168,7 +168,7 @@ func transctionHistoryCsvExportHelper(wallet modules.Wallet) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	sts, err := ComputeSummarizedTransactions(append(confirmedTxns, unconfirmedTxns...), n.ConsensusSet.Height())
+	sts, err := ComputeSummarizedTransactions(append(confirmedTxns, unconfirmedTxns...), n.ConsensusSet.Height(), wallet)
 	if err != nil {
 		return "", err
 	}
@@ -981,6 +981,73 @@ func collapseMenuHandler(w http.ResponseWriter, req *http.Request, _ httprouter.
 	writeHTML(w, getCachedPage(sessionID), sessionID)
 }
 
+func collectClaimsHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
+	sessionID := req.FormValue("session_id")
+	if sessionID == "" || !sessionIDExists(sessionID) {
+		redirect(w, req, nil)
+		return
+	}
+	var msgPrefix = "Unable to collect SPF rewards: "
+	wallet, err := getWallet(sessionID)
+	if err != nil {
+		msg := fmt.Sprintf("%s%v", msgPrefix, err)
+		writeError(w, msg, sessionID)
+		return
+	}
+	unlocked, err := wallet.Unlocked()
+	if err != nil {
+		msg := fmt.Sprintf("%s%v", msgPrefix, err)
+		writeError(w, msg, "")
+		return
+	}
+	if !unlocked {
+		msg := msgPrefix + "Wallet is locked."
+		writeError(w, msg, sessionID)
+		return
+	}
+	addresses, err := wallet.LastAddresses(1)
+	if err != nil {
+		msg := fmt.Sprintf("%s%v", msgPrefix, err)
+		writeError(w, msg, sessionID)
+		return
+	}
+	if len(addresses) == 0 {
+		_, err := wallet.NextAddress()
+		if err != nil {
+			msg := fmt.Sprintf("%s%v", msgPrefix, err)
+			writeError(w, msg, sessionID)
+			return
+		}
+	}
+	addresses, err = wallet.LastAddresses(1)
+	if err != nil {
+		msg := fmt.Sprintf("%s%v", msgPrefix, err)
+		writeError(w, msg, sessionID)
+		return
+	}
+	dest := addresses[0]
+	_, spfBal, _, err := wallet.ConfirmedBalance()
+	if err != nil {
+		msg := fmt.Sprintf("%s%v", msgPrefix, err)
+		writeError(w, msg, sessionID)
+		return
+	}
+	if spfBal.Cmp(types.ZeroCurrency) == 0 {
+		msg := msgPrefix + "No rewards to collect."
+		writeError(w, msg, sessionID)
+		return
+	}
+	_, err = wallet.SendSiafunds(spfBal, dest)
+	if err != nil {
+		msg := fmt.Sprintf("%s%v", msgPrefix, err)
+		writeError(w, msg, sessionID)
+		return
+	}
+	title := "SPF REWARDS COLLECTED"
+	msg := "A transaction to collect this wallets unclaimed SPF rewards is submitted. Claimed SPF rewards are spendable after 144 blocks."
+	writeMsg(w, title, msg, sessionID)
+}
+
 func scanningHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
 	sessionID := req.FormValue("session_id")
 	if sessionID == "" || !sessionIDExists(sessionID) {
@@ -1444,7 +1511,7 @@ func transactionHistoryJson(w http.ResponseWriter, req *http.Request, _ httprout
 		w.Write([]byte(fmt.Sprintf(msgPrefix+"%v", err)))
 		return
 	}
-	sts, err := ComputeSummarizedTransactions(append(confirmedTxns, unconfirmedTxns...), n.ConsensusSet.Height())
+	sts, err := ComputeSummarizedTransactions(append(confirmedTxns, unconfirmedTxns...), n.ConsensusSet.Height(), wallet)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(fmt.Sprintf(msgPrefix+"%v", err)))
@@ -1460,8 +1527,10 @@ func transactionHistoryJson(w http.ResponseWriter, req *http.Request, _ httprout
 			count++
 			if count >= pageMin && count < pageMax {
 				fmtAmount := txn.Scp
-				if txn.Spf != "" {
-					fmtAmount = fmtAmount + "; " + txn.Spf
+				if txn.Scp == "" && txn.Spf != "" {
+					fmtAmount = txn.Spf
+				} else if txn.Spf != "" {
+					fmtAmount = txn.Scp + "; " + txn.Spf
 				}
 				line := TransactionHistoryLine{}
 				line.TransactionID = txn.TxnID

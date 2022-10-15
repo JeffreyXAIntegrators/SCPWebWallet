@@ -65,6 +65,7 @@ func buildHTTPRoutes() *httprouter.Router {
 		router.POST("/gui/alert/restoreFromSeed", alertRestoreFromSeedHandler)
 		router.POST("/gui/changeLock", changeLockHandler)
 		router.POST("/gui/collapseMenu", collapseMenuHandler)
+		router.POST("/gui/collectClaims", collectClaimsHandler)
 		router.POST("/gui/expandMenu", expandMenuHandler)
 		router.POST("/gui/explainWhale", explainWhaleHandler)
 		router.POST("/gui/initializeSeed", initializeSeedHandler)
