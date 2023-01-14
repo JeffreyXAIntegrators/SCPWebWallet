@@ -6,7 +6,7 @@ require (
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/viper v1.10.1
 	gitlab.com/NebulousLabs/errors v0.0.0-20200929122200-06c536cf6975
-	gitlab.com/scpcorp/ScPrime v1.6.6
+	gitlab.com/scpcorp/ScPrime v1.7.0
 	golang.org/x/crypto v0.0.0-20220321153916-2c7772ba3064
 )
 
@@ -51,7 +51,7 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/starius/api2 v0.0.0-20220207151416-38e011ef2fc5 // indirect
 	github.com/starius/flock v0.0.0-20211126131212-41983f66ca4f // indirect
-	github.com/stretchr/testify v1.7.0 // indirect
+	github.com/stretchr/testify v1.8.1 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
 	github.com/syndtr/goleveldb v1.0.0 // indirect
 	github.com/xtaci/smux v1.5.16 // indirect
@@ -83,5 +83,5 @@ require (
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/ini.v1 v1.66.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

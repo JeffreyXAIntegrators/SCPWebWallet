@@ -14,7 +14,7 @@ import (
 	"gitlab.com/scpcorp/ScPrime/types"
 )
 
-//NewWalletSeed creates a new unique 28 or 29 word wallet seed
+// NewWalletSeed creates a new unique 28 or 29 word wallet seed
 func NewWalletSeed() (string, error) {
 	var entropy [crypto.EntropySize]byte
 

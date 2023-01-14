@@ -905,7 +905,7 @@ func uploadMultispendCsvHandler(w http.ResponseWriter, req *http.Request, _ http
 		return
 	}
 	// Mock the transaction to verify that the wallet is able to fund both transactions.
-	txnBuilder, err := wallet.BuildUnsignedBatchTransaction(coinOutputs, fundOutputs)
+	txnBuilder, err := wallet.BuildUnsignedBatchTransaction(coinOutputs, fundOutputs, nil)
 	if err != nil {
 		msg := fmt.Sprintf("%s%v", msgPrefix, err)
 		writeError(w, msg, sessionID)
@@ -914,7 +914,7 @@ func uploadMultispendCsvHandler(w http.ResponseWriter, req *http.Request, _ http
 	txnBuilder.Drop()
 	// Send the transactions
 	if len(coinOutputs) != 0 {
-		_, err = wallet.SendBatchTransaction(coinOutputs, nil)
+		_, err = wallet.SendBatchTransaction(coinOutputs, nil, nil)
 		if err != nil {
 			msg := fmt.Sprintf("%s%v", msgPrefix, err)
 			writeError(w, msg, sessionID)
@@ -922,7 +922,7 @@ func uploadMultispendCsvHandler(w http.ResponseWriter, req *http.Request, _ http
 		}
 	}
 	if len(fundOutputs) != 0 {
-		_, err = wallet.SendBatchTransaction(nil, fundOutputs)
+		_, err = wallet.SendBatchTransaction(nil, fundOutputs, nil)
 		if err != nil {
 			msg := fmt.Sprintf("%s%v", msgPrefix, err)
 			writeError(w, msg, sessionID)
@@ -1220,14 +1220,19 @@ func balancesHelper(sessionID string) (string, string, string, string, string) {
 		fmt.Printf("Unable to determine if wallet is unlocked: %v", err)
 	}
 	if unlocked {
-		scpBal, spfBal, scpClaimBal, err := wallet.ConfirmedBalance()
+		allBals, err := wallet.ConfirmedBalance()
 		if err != nil {
 			fmt.Printf("Unable to obtain confirmed balance: %v", err)
 		} else {
+			scpBal := allBals.CoinBalance
+			fundBal := allBals.FundBalance
+			// fundbBBal := allBals.FundbBalance
+			claimBal := allBals.ClaimBalance
+			// claimbBal := allBals.ClaimbBalance
 			scpBalFloat, _ := new(big.Rat).SetFrac(scpBal.Big(), types.ScPrimecoinPrecision.Big()).Float64()
-			scpClaimBalFloat, _ := new(big.Rat).SetFrac(scpClaimBal.Big(), types.ScPrimecoinPrecision.Big()).Float64()
+			scpClaimBalFloat, _ := new(big.Rat).SetFrac(claimBal.Big(), types.ScPrimecoinPrecision.Big()).Float64()
 			fmtScpBal = fmt.Sprintf("%15.2f", scpBalFloat)
-			fmtSpfBal = fmt.Sprintf("%s", spfBal)
+			fmtSpfBal = fmt.Sprintf("%s", fundBal)
 			fmtClmBal = fmt.Sprintf("%15.2f", scpClaimBalFloat)
 			fmtWhale = whaleHelper(scpBalFloat)
 		}
