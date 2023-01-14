@@ -36,6 +36,7 @@ func Skip() {
 
 // Close bootstrapping consensus module
 func Close() {
+	fmt.Println("Closing bootstrapper...")
 	status = Closed
 }
 

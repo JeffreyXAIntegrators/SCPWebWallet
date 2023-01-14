@@ -5,8 +5,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/ncruces/zenity"
-
 	"gitlab.com/scpcorp/ScPrime/modules"
 	"gitlab.com/scpcorp/ScPrime/modules/consensus"
 	"gitlab.com/scpcorp/ScPrime/modules/gateway"
@@ -60,160 +58,17 @@ func loadNode(node *node.Node, config *wwConfig.WebWalletConfig) error {
 	return nil
 }
 
-func closeNode(node *node.Node, config *wwConfig.WebWalletConfig, shutdownGui zenity.ProgressDialog) {
+func closeNode(node *node.Node, config *wwConfig.WebWalletConfig) error {
 	fmt.Println("Closing modules:")
 	config.CreateWallet = false
 	config.CreateTransactionPool = false
-	closeConsensusSetBuilder(shutdownGui)
+	consensusbuilder.Close()
 	config.CreateConsensusSet = false
 	config.CreateGateway = false
-	closeMiningPool(node, shutdownGui)
-	closeStratumMiner(node, shutdownGui)
-	closeRenter(node, shutdownGui)
-	closeHost(node, shutdownGui)
-	closeMiner(node, shutdownGui)
-	closeWallet(node, shutdownGui)
-	closeTransactionPool(node, shutdownGui)
-	closeExplorer(node, shutdownGui)
-	closeConsensusSet(node, shutdownGui)
-	closeGateway(node, shutdownGui)
-	closeMux(node, shutdownGui)
-	closeBootstrapper(shutdownGui)
-	closeBrowserConfig(shutdownGui)
-}
-
-func closeConsensusSetBuilder(shutdownGui zenity.ProgressDialog) {
-	fmt.Println("Closing consensusset builder...")
-	if shutdownGui != nil {
-		shutdownGui.Text("Closing consensusset builder...")
-	}
-	consensusbuilder.Close()
-}
-
-func closeMiningPool(node *node.Node, shutdownGui zenity.ProgressDialog) {
-	if node.MiningPool != nil {
-		fmt.Println("Closing mining pool...")
-		if shutdownGui != nil {
-			shutdownGui.Text("Closing mining pool...")
-		}
-		node.MiningPool.Close()
-	}
-}
-
-func closeStratumMiner(node *node.Node, shutdownGui zenity.ProgressDialog) {
-	if node.StratumMiner != nil {
-		fmt.Println("Closing stratum miner...")
-		if shutdownGui != nil {
-			shutdownGui.Text("Closing stratum miner...")
-		}
-		node.StratumMiner.Close()
-	}
-}
-
-func closeRenter(node *node.Node, shutdownGui zenity.ProgressDialog) {
-	if node.Renter != nil {
-		fmt.Println("Closing renter...")
-		if shutdownGui != nil {
-			shutdownGui.Text("Closing renter...")
-		}
-		node.Renter.Close()
-	}
-}
-
-func closeHost(node *node.Node, shutdownGui zenity.ProgressDialog) {
-	if node.Host != nil {
-		fmt.Println("Closing host...")
-		if shutdownGui != nil {
-			shutdownGui.Text("Closing host...")
-		}
-		node.Host.Close()
-	}
-}
-
-func closeMiner(node *node.Node, shutdownGui zenity.ProgressDialog) {
-	if node.Miner != nil {
-		fmt.Println("Closing miner...")
-		if shutdownGui != nil {
-			shutdownGui.Text("Closing miner...")
-		}
-		node.Miner.Close()
-	}
-}
-
-func closeWallet(node *node.Node, shutdownGui zenity.ProgressDialog) {
-	if node.Wallet != nil {
-		fmt.Println("Closing wallet...")
-		if shutdownGui != nil {
-			shutdownGui.Text("Closing wallet...")
-		}
-		node.Wallet.Close()
-	}
-}
-
-func closeTransactionPool(node *node.Node, shutdownGui zenity.ProgressDialog) {
-	if node.TransactionPool != nil {
-		fmt.Println("Closing transactionpool...")
-		if shutdownGui != nil {
-			shutdownGui.Text("Closing transactionpool...")
-		}
-		node.TransactionPool.Close()
-	}
-}
-
-func closeExplorer(node *node.Node, shutdownGui zenity.ProgressDialog) {
-	if node.Explorer != nil {
-		fmt.Println("Closing explorer...")
-		if shutdownGui != nil {
-			shutdownGui.Text("Closing explorer...")
-		}
-		node.Explorer.Close()
-	}
-}
-
-func closeConsensusSet(node *node.Node, shutdownGui zenity.ProgressDialog) {
-	if node.ConsensusSet != nil {
-		fmt.Println("Closing consensusset...")
-		if shutdownGui != nil {
-			shutdownGui.Text("Closing consensusset...")
-		}
-		node.ConsensusSet.Close()
-	}
-}
-
-func closeGateway(node *node.Node, shutdownGui zenity.ProgressDialog) {
-	if node.Gateway != nil {
-		fmt.Println("Closing gateway...")
-		if shutdownGui != nil {
-			shutdownGui.Text("Closing gateway...")
-		}
-		node.Gateway.Close()
-	}
-}
-
-func closeMux(node *node.Node, shutdownGui zenity.ProgressDialog) {
-	if node.Mux != nil {
-		fmt.Println("Closing mux...")
-		if shutdownGui != nil {
-			shutdownGui.Text("Closing mux...")
-		}
-		node.Mux.Close()
-	}
-}
-
-func closeBootstrapper(shutdownGui zenity.ProgressDialog) {
-	fmt.Println("Closing bootstrapper...")
-	if shutdownGui != nil {
-		shutdownGui.Text("Closing bootstrapper...")
-	}
+	err := node.Close()
 	bootstrapper.Close()
-}
-
-func closeBrowserConfig(shutdownGui zenity.ProgressDialog) {
-	fmt.Println("Closing browser config...")
-	if shutdownGui != nil {
-		shutdownGui.Text("Closing browser config...")
-	}
 	browserconfig.Close()
+	return err
 }
 
 func initializeBrowser(config *wwConfig.WebWalletConfig) (bool, error) {

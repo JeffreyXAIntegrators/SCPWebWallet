@@ -191,11 +191,11 @@ func StartDaemon(config *wwConfig.WebWalletConfig) error {
 	if !config.Headless {
 		title := "Shutting Down ScPrime Web Wallet"
 		shutdownGui, _ = zenity.Progress(zenity.Title(title), zenity.Pulsate())
-		shutdownGui.Text("Closing sessions...")
+		shutdownGui.Text("Closing node...")
 	}
 	server.CloseAllWallets()
 	if node != nil {
-		closeNode(node, config, shutdownGui)
+		closeNode(node, config)
 	}
 	if shutdownGui != nil {
 		shutdownGui.Complete()

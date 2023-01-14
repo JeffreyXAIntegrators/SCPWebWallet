@@ -2,6 +2,7 @@ package browserconfig
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"time"
@@ -29,6 +30,7 @@ var status = ""
 
 // Close the consensus builder module
 func Close() {
+	fmt.Println("Closing browser config...")
 	status = Closed
 }
 
