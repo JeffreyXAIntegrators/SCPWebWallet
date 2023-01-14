@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>ScPrime Web Wallet</title>
+    <link rel="stylesheet" href="/gui/styles.css">
+    <script type="text/javascript" src="/gui/scripts.js"></script>
+    <meta http-equiv="PRAGMA" content="NO-CACHE">
+    <meta http-equiv="CACHE-CONTROL" content="NO-CACHE">
+  </head>
+  <body>
+    <div class="col-5 left top no-wrap">
+      <div>
+        <img class="scprime-logo" alt="ScPrime Web Wallet" src="/gui/logo.png"/>
+      </div>
+    </div>
+    <div id="popup" class="popup center">
+      <h2 class="uppercase">Configure Browser</h2>
+      <form action="/configureBrowser?&CACHE_BUSTER;" method="post">
+        <input type="hidden" name="browser" value="default">
+        <div class="pad">
+          <button type="submit">Default</button>
+        </div>
+      </form>
+      <form action="/configureBrowser?&CACHE_BUSTER;" method="post">
+        <input type="hidden" name="browser" value="chrome">
+        <div class="pad">
+          <button type="submit">Chrome</button>
+        </div>
+      </form>
+      <form action="/configureBrowser?&CACHE_BUSTER;" method="post">
+        <input type="hidden" name="browser" value="edge">
+        <div class="pad">
+          <button type="submit">Edge</button>
+        </div>
+      </form>
+    </div>
+    <div id="fade" class="fade"></div>
+  </body>
+</html>
+

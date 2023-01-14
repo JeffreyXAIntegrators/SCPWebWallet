@@ -15,6 +15,7 @@ import (
 	"gitlab.com/scpcorp/ScPrime/node"
 
 	"gitlab.com/scpcorp/webwallet/modules/bootstrapper"
+	"gitlab.com/scpcorp/webwallet/modules/browserconfig"
 	"gitlab.com/scpcorp/webwallet/modules/consensesbuilder"
 	"gitlab.com/scpcorp/webwallet/server"
 	wwConfig "gitlab.com/scpcorp/webwallet/utils/config"
@@ -28,6 +29,13 @@ func loadNode(node *node.Node, config *wwConfig.WebWalletConfig) error {
 		return err
 	}
 	node.Dir = dir
+	// Configure Browser
+	needsShutdown, err := initializeBrowser(config)
+	if err != nil {
+		return err
+	} else if needsShutdown {
+		return nil
+	}
 	// Bootstrap Consensus Set if necessary
 	bootstrapConsensusSet(config)
 	// Attach Node To Server
@@ -71,6 +79,7 @@ func closeNode(node *node.Node, config *wwConfig.WebWalletConfig, shutdownGui ze
 	closeGateway(node, shutdownGui)
 	closeMux(node, shutdownGui)
 	closeBootstrapper(shutdownGui)
+	closeBrowserConfig(shutdownGui)
 }
 
 func closeConsensusSetBuilder(shutdownGui zenity.ProgressDialog) {
@@ -197,6 +206,41 @@ func closeBootstrapper(shutdownGui zenity.ProgressDialog) {
 		shutdownGui.Text("Closing bootstrapper...")
 	}
 	bootstrapper.Close()
+}
+
+func closeBrowserConfig(shutdownGui zenity.ProgressDialog) {
+	fmt.Println("Closing browser config...")
+	if shutdownGui != nil {
+		shutdownGui.Text("Closing browser config...")
+	}
+	browserconfig.Close()
+}
+
+func initializeBrowser(config *wwConfig.WebWalletConfig) (bool, error) {
+	loadStart := time.Now()
+	fmt.Printf("Initializing browser...")
+	time.Sleep(1 * time.Millisecond)
+	browserconfig.Start(config.Dir)
+	loadTime := time.Since(loadStart).Seconds()
+	if browserconfig.Status() == browserconfig.Closed {
+		fmt.Println(" closed after", loadTime, "seconds.")
+		return true, nil
+	}
+	if browserconfig.Status() == browserconfig.Failed {
+		fmt.Println(" failed after", loadTime, "seconds.")
+		return true, nil
+	}
+	browser, err := browserconfig.Browser(config.Dir)
+	if err != nil {
+		fmt.Println(" failed after", loadTime, "seconds.")
+		return true, err
+	}
+	if browserconfig.Status() == browserconfig.Initialized {
+		fmt.Printf(" browser initialized to %s in %v seconds.\n", browser, loadTime)
+		return true, nil
+	}
+	fmt.Printf(" browser set to %s in %v seconds.\n", browser, loadTime)
+	return false, nil
 }
 
 func bootstrapConsensusSet(config *wwConfig.WebWalletConfig) {

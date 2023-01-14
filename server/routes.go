@@ -28,6 +28,7 @@ func buildHTTPRoutes() *httprouter.Router {
 		router.GET("/skipBootstrapper", skipBootstrapperHandler)
 		router.GET("/initializeConsensusBuilder", initializeConsensusBuilderHandler)
 		router.GET("/configureBrowser", redirect)
+		router.POST("/configureBrowser", configureBrowser)
 		router.GET("/uploadConsensusSetForm", uploadConsensusSetFormHandler)
 		router.POST("/uploadConsensusSet", uploadConsensusSetHandler)
 	} else {

@@ -19,6 +19,7 @@ import (
 
 	"gitlab.com/scpcorp/webwallet/build"
 	"gitlab.com/scpcorp/webwallet/modules/bootstrapper"
+	"gitlab.com/scpcorp/webwallet/modules/browserconfig"
 	consensusbuilder "gitlab.com/scpcorp/webwallet/modules/consensesbuilder"
 	"gitlab.com/scpcorp/webwallet/resources"
 
@@ -737,8 +738,28 @@ func explorerHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Para
 	writeHTML(w, html, sessionID)
 }
 
+func configureBrowser(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
+	browser := req.FormValue("browser")
+	browserconfig.Configure(build.ScPrimeWebWalletDir(), browser)
+	if browser != "default" {
+		html := resources.BrowserConfigured()
+		writeStaticHTML(w, html, "")
+		return
+	}
+	for i := 0; i < 10; i++ {
+		if n != nil {
+			break
+		}
+		time.Sleep(25 * time.Millisecond)
+	}
+	redirect(w, req, nil)
+}
+
 func initializingNodeHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
-	if consensusbuilder.Progress() != "" {
+	browserconfig.Initialize()
+	if browserconfig.Status() == browserconfig.Waiting {
+		writeStaticHTML(w, resources.InitializeBrowserForm(), "")
+	} else if consensusbuilder.Progress() != "" {
 		buildingConsensusSetHandler(w, req, nil)
 	} else if bootstrapper.Progress() != "" {
 		bootstrappingHandler(w, req, nil)

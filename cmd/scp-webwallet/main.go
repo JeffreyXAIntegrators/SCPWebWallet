@@ -45,18 +45,9 @@ func die(err error) {
 
 // main starts the daemon.
 func main() {
-	// Configure Browser settings.
-	done, err := setupBrowser()
-	if err != nil {
-		die(err)
-		return
-	}
-	if !done {
-		return
-	}
 	// Start the ScPrime web wallet daemon.
 	// the startDaemon method will only return when it is shutting down.
-	err = daemon.StartDaemon(&webWalletConfig)
+	err := daemon.StartDaemon(&webWalletConfig)
 	if err != nil {
 		die(err)
 	}

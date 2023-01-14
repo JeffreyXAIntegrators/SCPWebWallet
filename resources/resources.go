@@ -75,6 +75,12 @@ var initializeSeedForm string
 //go:embed resources/forms/initialize_wallet.html
 var initializeWalletForm string
 
+//go:embed resources/forms/initialize_browser.html
+var initializeBrowserForm string
+
+//go:embed resources/forms/browser_configured.html
+var browserConfigured string
+
 //go:embed resources/forms/restore_from_seed.html
 var restoreFromSeedForm string
 
@@ -218,6 +224,16 @@ func InitializeSeedForm() string {
 // InitializeWalletForm returns the initialize wallet form
 func InitializeWalletForm() string {
 	return initializeWalletForm
+}
+
+// InitializeBrowserForm returns the Initialize browser form
+func InitializeBrowserForm() string {
+	return initializeBrowserForm
+}
+
+// BrowserConfigured returns the browser configured alert
+func BrowserConfigured() string {
+	return browserConfigured
 }
 
 // RestoreFromSeedForm returns the restore from seed form
