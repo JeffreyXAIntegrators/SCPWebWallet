@@ -81,7 +81,7 @@ func ComputeSummarizedTransactions(pts []modules.ProcessedTransaction, blockHeig
 		}
 		var incomingFundsB types.Currency
 		for _, output := range txn.Outputs {
-			if output.FundType == types.SpecifierSiafundOutput && output.WalletAddress {
+			if output.FundType == types.SpecifierSiafundB && output.WalletAddress {
 				incomingFundsB = incomingFundsB.Add(output.Value)
 			}
 		}
