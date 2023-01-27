@@ -186,16 +186,19 @@ function refreshBalance(sessionID) {
         for (const element of document.getElementsByClassName("unconfirmed")){
           element.innerHTML = result[1];
         }
-        for (const element of document.getElementsByClassName("spf_funds")){
+        for (const element of document.getElementsByClassName("spfa_funds")){
           element.innerHTML = result[2];
+        }
+        for (const element of document.getElementsByClassName("spfb_funds")){
+          element.innerHTML = result[3];
         }
         var whaleSize = document.getElementById("whale_size")
         if (typeof(whaleSize) != 'undefined' && whaleSize != null) {
-          whaleSize.innerHTML = "Whale Size: " + result[4];
+          whaleSize.innerHTML = "Whale Size: " + result[5];
         }
         var whaleSizeButton = document.getElementById("whale_size_button")
         if (typeof(whaleSizeButton) != 'undefined' && whaleSizeButton != null) {
-          whaleSizeButton.value = "Whale Size: " + result[4];
+          whaleSizeButton.value = "Whale Size: " + result[5];
         }
         setTimeout(() => {refreshBalance(sessionID);}, 60000); // 1 minute in milliseconds
       })

@@ -58,8 +58,8 @@ func faviconHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Param
 
 func balanceHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
 	sessionID := req.FormValue("session_id")
-	fmtScpBal, fmtUncBal, fmtSpfBal, fmtClmBal, fmtWhale := balancesHelper(sessionID)
-	writeArray(w, []string{fmtScpBal, fmtUncBal, fmtSpfBal, fmtClmBal, fmtWhale})
+	fmtScpBal, fmtUncBal, fmtSpfaBal, fmtSpfbBal, fmtClmBal, fmtWhale := balancesHelper(sessionID)
+	writeArray(w, []string{fmtScpBal, fmtUncBal, fmtSpfaBal, fmtSpfbBal, fmtClmBal, fmtWhale})
 }
 
 func blockHeightHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
@@ -159,7 +159,7 @@ func transactionHistoryCsvExport(w http.ResponseWriter, req *http.Request, _ htt
 }
 
 func transctionHistoryCsvExportHelper(wallet modules.Wallet) (string, error) {
-	csv := `"Transaction ID","Type","Amount SCP","Amount SPF","Confirmed","DateTime"` + "\n"
+	csv := `"Transaction ID","Type","Amount SCP","Amount SPF-A","Amount SPF-B","Confirmed","DateTime"` + "\n"
 	heightMin := 0
 	confirmedTxns, err := wallet.Transactions(types.BlockHeight(heightMin), n.ConsensusSet.Height())
 	if err != nil {
@@ -176,11 +176,15 @@ func transctionHistoryCsvExportHelper(wallet modules.Wallet) (string, error) {
 	for _, txn := range sts {
 		// Format transaction type
 		if txn.Type != "SETUP" {
-			fmtSpf := txn.Spf
-			if fmtSpf == "" {
-				fmtSpf = "0"
+			fmtSpfA := txn.SpfA
+			if fmtSpfA == "" {
+				fmtSpfA = "0"
 			}
-			csv = csv + fmt.Sprintf(`"%s","%s","%s","%s","%s","%s"`, txn.TxnID, txn.Type, txn.Scp, fmtSpf, txn.Confirmed, txn.Time) + "\n"
+			fmtSpfB := txn.SpfB
+			if fmtSpfB == "" {
+				fmtSpfB = "0"
+			}
+			csv = csv + fmt.Sprintf(`"%s","%s","%s","%s","%s","%s","%s"`, txn.TxnID, txn.Type, txn.Scp, fmtSpfA, fmtSpfB, txn.Confirmed, txn.Time) + "\n"
 		}
 	}
 	return csv, nil
@@ -592,7 +596,7 @@ func sendCoinsHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Par
 			writeError(w, msg, sessionID)
 			return
 		}
-	} else if coinType == "SPF" {
+	} else if coinType == "SPF-A" {
 		amount, err := NewCurrencyStr(req.FormValue("amount") + "SPF")
 		if err != nil {
 			msg := fmt.Sprintf("%s%v", msgPrefix, err)
@@ -1154,10 +1158,11 @@ func writeHTML(w http.ResponseWriter, html string, sessionID string) {
 	html = strings.Replace(html, "&STATUS_COLOR;", fmtStatCo, -1)
 	html = strings.Replace(html, "&STATUS;", fmtStatus, -1)
 	html = strings.Replace(html, "&BLOCK_HEIGHT;", fmtHeight, -1)
-	fmtScpBal, fmtUncBal, fmtSpfBal, fmtClmBal, fmtWhale := balancesHelper(sessionID)
+	fmtScpBal, fmtUncBal, fmtSpfaBal, fmtSpfbBal, fmtClmBal, fmtWhale := balancesHelper(sessionID)
 	html = strings.Replace(html, "&SCP_BALANCE;", fmtScpBal, -1)
 	html = strings.Replace(html, "&UNCONFIRMED_DELTA;", fmtUncBal, -1)
-	html = strings.Replace(html, "&SPF_BALANCE;", fmtSpfBal, -1)
+	html = strings.Replace(html, "&SPFA_BALANCE;", fmtSpfaBal, -1)
+	html = strings.Replace(html, "&SPFB_BALANCE;", fmtSpfbBal, -1)
 	html = strings.Replace(html, "&SCP_CLAIM_BALANCE;", fmtClmBal, -1)
 	html = strings.Replace(html, "&WHALE_SIZE;", fmtWhale, -1)
 	if menuIsCollapsed(sessionID) {
@@ -1205,15 +1210,16 @@ func whaleHelper(scpBal float64) string {
 	return "🐳"
 }
 
-func balancesHelper(sessionID string) (string, string, string, string, string) {
+func balancesHelper(sessionID string) (string, string, string, string, string, string) {
 	fmtScpBal := "?"
 	fmtUncBal := "?"
-	fmtSpfBal := "?"
+	fmtSpfaBal := "?"
+	fmtSpfbBal := "?"
 	fmtClmBal := "?"
 	fmtWhale := "?"
 	wallet, _ := getWallet(sessionID)
 	if wallet == nil {
-		return fmtScpBal, fmtUncBal, fmtSpfBal, fmtClmBal, fmtWhale
+		return fmtScpBal, fmtUncBal, fmtSpfaBal, fmtSpfbBal, fmtClmBal, fmtWhale
 	}
 	unlocked, err := wallet.Unlocked()
 	if err != nil {
@@ -1225,16 +1231,19 @@ func balancesHelper(sessionID string) (string, string, string, string, string) {
 			fmt.Printf("Unable to obtain confirmed balance: %v", err)
 		} else {
 			scpBal := allBals.CoinBalance
-			fundBal := allBals.FundBalance
+			fundABal := allBals.FundBalance
+			fundBBal := allBals.FundbBalance
 			// fundbBBal := allBals.FundbBalance
 			claimBal := allBals.ClaimBalance
 			// claimbBal := allBals.ClaimbBalance
 			scpBalFloat, _ := new(big.Rat).SetFrac(scpBal.Big(), types.ScPrimecoinPrecision.Big()).Float64()
 			scpClaimBalFloat, _ := new(big.Rat).SetFrac(claimBal.Big(), types.ScPrimecoinPrecision.Big()).Float64()
 			fmtScpBal = fmt.Sprintf("%15.2f", scpBalFloat)
-			fmtSpfBal = fmt.Sprintf("%s", fundBal)
+			fmtSpfaBal = fmt.Sprintf("%s", fundABal)
+			fmtSpfbBal = fmt.Sprintf("%s", fundBBal)
 			fmtClmBal = fmt.Sprintf("%15.2f", scpClaimBalFloat)
 			fmtWhale = whaleHelper(scpBalFloat)
+
 		}
 		scpOut, scpIn, err := wallet.UnconfirmedBalance()
 		if err != nil {
@@ -1245,7 +1254,7 @@ func balancesHelper(sessionID string) (string, string, string, string, string) {
 			fmtUncBal = fmt.Sprintf("%15.2f", (scpInFloat - scpOutFloat))
 		}
 	}
-	return fmtScpBal, fmtUncBal, fmtSpfBal, fmtClmBal, fmtWhale
+	return fmtScpBal, fmtUncBal, fmtSpfaBal, fmtSpfbBal, fmtClmBal, fmtWhale
 }
 
 func blockHeightHelper(sessionID string) (string, string, string) {
@@ -1486,8 +1495,11 @@ func transactionHistoryJson(w http.ResponseWriter, req *http.Request, _ httprout
 			count++
 			if count >= pageMin && count < pageMax {
 				fmtAmount := txn.Scp
-				if txn.Spf != "" {
-					fmtAmount = fmtAmount + "; " + txn.Spf
+				if txn.SpfA != "" {
+					fmtAmount = fmtAmount + "; " + txn.SpfA
+				}
+				if txn.SpfB != "" {
+					fmtAmount = fmtAmount + "; " + txn.SpfB
 				}
 				line := TransactionHistoryLine{}
 				line.TransactionID = txn.TxnID

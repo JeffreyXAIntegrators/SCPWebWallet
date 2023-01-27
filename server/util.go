@@ -46,7 +46,8 @@ type SummarizedTransaction struct {
 	Time      string `json:"time"`
 	Confirmed string `json:"confirmed"`
 	Scp       string `json:"scp"`
-	Spf       string `json:"spf"`
+	SpfA      string `json:"spfa"`
+	SpfB      string `json:"spfb"`
 }
 
 // ComputeSummarizedTransactions creates a set of SummarizedTransactions
@@ -59,17 +60,29 @@ func ComputeSummarizedTransactions(pts []modules.ProcessedTransaction, blockHeig
 	}
 	for _, txn := range vts {
 		// Determine the number of outgoing coins and funds.
-		var outgoingFunds types.Currency
+		var outgoingFundsA types.Currency
 		for _, input := range txn.Inputs {
 			if input.FundType == types.SpecifierSiafundInput && input.WalletAddress {
-				outgoingFunds = outgoingFunds.Add(input.Value)
+				outgoingFundsA = outgoingFundsA.Add(input.Value)
+			}
+		}
+		var outgoingFundsB types.Currency
+		for _, input := range txn.Inputs {
+			if input.FundType == types.SpecifierSiafundB && input.WalletAddress {
+				outgoingFundsB = outgoingFundsB.Add(input.Value)
 			}
 		}
 		// Determine the number of incoming funds.
-		var incomingFunds types.Currency
+		var incomingFundsA types.Currency
 		for _, output := range txn.Outputs {
 			if output.FundType == types.SpecifierSiafundOutput && output.WalletAddress {
-				incomingFunds = incomingFunds.Add(output.Value)
+				incomingFundsA = incomingFundsA.Add(output.Value)
+			}
+		}
+		var incomingFundsB types.Currency
+		for _, output := range txn.Outputs {
+			if output.FundType == types.SpecifierSiafundOutput && output.WalletAddress {
+				incomingFundsB = incomingFundsB.Add(output.Value)
 			}
 		}
 		// Convert the scp to a float.
@@ -87,11 +100,17 @@ func ComputeSummarizedTransactions(pts []modules.ProcessedTransaction, blockHeig
 		}
 		st.Scp = fmt.Sprintf("%15.2f SCP", incomingCoinsFloat-outgoingCoinsFloat)
 		// For funds, need to avoid having a negative types.Currency.
-		if incomingFunds.Cmp(outgoingFunds) > 0 {
-			st.Spf = fmt.Sprintf("%14v SPF %v\n", incomingFunds.Sub(outgoingFunds), txn.TxType)
-		} else if incomingFunds.Cmp(outgoingFunds) < 0 {
-			st.Spf = fmt.Sprintf("-%14v SPF %v\n", outgoingFunds.Sub(incomingFunds), txn.TxType)
+		if incomingFundsA.Cmp(outgoingFundsA) > 0 {
+			st.SpfA = fmt.Sprintf("%14v SPF-A %v\n", incomingFundsA.Sub(outgoingFundsA), txn.TxType)
+		} else if incomingFundsA.Cmp(outgoingFundsA) < 0 {
+			st.SpfA = fmt.Sprintf("-%14v SPF-A %v\n", outgoingFundsA.Sub(incomingFundsA), txn.TxType)
 		}
+		if incomingFundsB.Cmp(outgoingFundsB) > 0 {
+			st.SpfB = fmt.Sprintf("%14v SPF-B %v\n", incomingFundsB.Sub(outgoingFundsB), txn.TxType)
+		} else if incomingFundsA.Cmp(outgoingFundsA) < 0 {
+			st.SpfB = fmt.Sprintf("-%14v SPF-B %v\n", outgoingFundsB.Sub(incomingFundsB), txn.TxType)
+		}
+
 		sts = append(sts, st)
 	}
 	return sts, nil
