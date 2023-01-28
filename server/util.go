@@ -73,21 +73,25 @@ func ComputeSummarizedTransactions(pts []modules.ProcessedTransaction, blockHeig
 			}
 		}
 		// Determine the number of incoming funds.
-		var incomingFundsA types.Currency
+		var incomingFundsA, incomingFundsB types.Currency
 		for _, output := range txn.Outputs {
 			if output.FundType == types.SpecifierSiafundOutput && output.WalletAddress {
-				incomingFundsA = incomingFundsA.Add(output.Value)
+				isSPFB, err := n.ConsensusSet.IsSiafundBOutput(types.SiafundOutputID(output.ID))
+				if err != nil {
+					return nil, fmt.Errorf("Cannot determine if it's SPF-B output: %w", err)
+				}
+				if isSPFB {
+					incomingFundsB = incomingFundsB.Add(output.Value)
+				} else {
+					incomingFundsA = incomingFundsA.Add(output.Value)
+				}
 			}
 		}
-		var incomingFundsB types.Currency
-		for _, output := range txn.Outputs {
-			if output.FundType == types.SpecifierSiafundB && output.WalletAddress {
-				incomingFundsB = incomingFundsB.Add(output.Value)
-			}
-		}
+
 		// Convert the scp to a float.
 		incomingCoinsFloat, _ := new(big.Rat).SetFrac(txn.ConfirmedIncomingValue.Big(), types.ScPrimecoinPrecision.Big()).Float64()
 		outgoingCoinsFloat, _ := new(big.Rat).SetFrac(txn.ConfirmedOutgoingValue.Big(), types.ScPrimecoinPrecision.Big()).Float64()
+
 		// Summarize transaction
 		st := SummarizedTransaction{}
 		st.TxnID = strings.ToUpper(fmt.Sprintf("%v", txn.TransactionID))
@@ -98,17 +102,27 @@ func ComputeSummarizedTransactions(pts []modules.ProcessedTransaction, blockHeig
 		} else {
 			st.Confirmed = "No"
 		}
-		st.Scp = fmt.Sprintf("%15.2f SCP", incomingCoinsFloat-outgoingCoinsFloat)
-		// For funds, need to avoid having a negative types.Currency.
-		if incomingFundsA.Cmp(outgoingFundsA) > 0 {
-			st.SpfA = fmt.Sprintf("%14v SPF-A %v\n", incomingFundsA.Sub(outgoingFundsA), txn.TxType)
-		} else if incomingFundsA.Cmp(outgoingFundsA) < 0 {
-			st.SpfA = fmt.Sprintf("-%14v SPF-A %v\n", outgoingFundsA.Sub(incomingFundsA), txn.TxType)
+
+		scpAmount := incomingCoinsFloat - outgoingCoinsFloat
+		if scpAmount != 0 {
+			st.Scp = strings.TrimRight(strings.TrimRight(fmt.Sprintf("%15.4f", scpAmount), "0"), ".") + " SCP"
 		}
-		if incomingFundsB.Cmp(outgoingFundsB) > 0 {
-			st.SpfB = fmt.Sprintf("%14v SPF-B %v\n", incomingFundsB.Sub(outgoingFundsB), txn.TxType)
-		} else if incomingFundsA.Cmp(outgoingFundsA) < 0 {
-			st.SpfB = fmt.Sprintf("-%14v SPF-B %v\n", outgoingFundsB.Sub(incomingFundsB), txn.TxType)
+
+		// For funds, need to avoid having a negative types.Currency.
+		// Doing with floats, and for display float precision is more than enough.
+		incomingSPFA, _ := incomingFundsA.Float64()
+		outgoingSPFA, _ := outgoingFundsA.Float64()
+		SPFAAmount := incomingSPFA - outgoingSPFA
+
+		incomingSPFB, _ := incomingFundsB.Float64()
+		outgoingSPFB, _ := outgoingFundsB.Float64()
+		SPFBAmount := incomingSPFB - outgoingSPFB
+
+		if SPFAAmount != 0 {
+			st.SpfA = fmt.Sprintf("%14v SPF-A %v\n", SPFAAmount, txn.TxType)
+		}
+		if SPFBAmount != 0 {
+			st.SpfB = fmt.Sprintf("%14v SPF-B %v\n", SPFBAmount, txn.TxType)
 		}
 
 		sts = append(sts, st)

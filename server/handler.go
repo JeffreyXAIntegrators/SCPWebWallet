@@ -1238,10 +1238,10 @@ func balancesHelper(sessionID string) (string, string, string, string, string, s
 			// claimbBal := allBals.ClaimbBalance
 			scpBalFloat, _ := new(big.Rat).SetFrac(scpBal.Big(), types.ScPrimecoinPrecision.Big()).Float64()
 			scpClaimBalFloat, _ := new(big.Rat).SetFrac(claimBal.Big(), types.ScPrimecoinPrecision.Big()).Float64()
-			fmtScpBal = fmt.Sprintf("%15.2f", scpBalFloat)
+			fmtScpBal = fmt.Sprintf("%15.4f", scpBalFloat)
 			fmtSpfaBal = fmt.Sprintf("%s", fundABal)
 			fmtSpfbBal = fmt.Sprintf("%s", fundBBal)
-			fmtClmBal = fmt.Sprintf("%15.2f", scpClaimBalFloat)
+			fmtClmBal = fmt.Sprintf("%15.4f", scpClaimBalFloat)
 			fmtWhale = whaleHelper(scpBalFloat)
 
 		}
@@ -1251,7 +1251,7 @@ func balancesHelper(sessionID string) (string, string, string, string, string, s
 		} else {
 			scpInFloat, _ := new(big.Rat).SetFrac(scpIn.Big(), types.ScPrimecoinPrecision.Big()).Float64()
 			scpOutFloat, _ := new(big.Rat).SetFrac(scpOut.Big(), types.ScPrimecoinPrecision.Big()).Float64()
-			fmtUncBal = fmt.Sprintf("%15.2f", (scpInFloat - scpOutFloat))
+			fmtUncBal = fmt.Sprintf("%15.4f", (scpInFloat - scpOutFloat))
 		}
 	}
 	return fmtScpBal, fmtUncBal, fmtSpfaBal, fmtSpfbBal, fmtClmBal, fmtWhale
@@ -1490,17 +1490,21 @@ func transactionHistoryJson(w http.ResponseWriter, req *http.Request, _ httprout
 	for i := len(sts) - 1; i >= 0; i-- {
 		txn := sts[i]
 		// Format transaction type
-		isSetup := txn.Type == "SETUP" && txn.Scp == fmt.Sprintf("%15.2f SCP", float64(0))
+		isSetup := txn.Type == "SETUP" && txn.Scp == ""
 		if !isSetup {
 			count++
 			if count >= pageMin && count < pageMax {
-				fmtAmount := txn.Scp
+				var amountArr []string
+				if txn.Scp != "" {
+					amountArr = append(amountArr, txn.Scp)
+				}
 				if txn.SpfA != "" {
-					fmtAmount = fmtAmount + "; " + txn.SpfA
+					amountArr = append(amountArr, txn.SpfA)
 				}
 				if txn.SpfB != "" {
-					fmtAmount = fmtAmount + "; " + txn.SpfB
+					amountArr = append(amountArr, txn.SpfB)
 				}
+				fmtAmount := strings.Join(amountArr, "; ")
 				line := TransactionHistoryLine{}
 				line.TransactionID = txn.TxnID
 				line.ShortTransactionID = txn.TxnID[0:16] + "..." + txn.TxnID[len(txn.TxnID)-16:]
