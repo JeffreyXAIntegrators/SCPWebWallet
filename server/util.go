@@ -41,13 +41,13 @@ var (
 // SummarizedTransaction is a transaction that has been formatted for·
 // humans to read.
 type SummarizedTransaction struct {
-	TxnID     string `json:"txn_id"`
-	Type      string `json:"type"`
-	Time      string `json:"time"`
-	Confirmed string `json:"confirmed"`
-	Scp       string `json:"scp"`
-	SpfA      string `json:"spfa"`
-	SpfB      string `json:"spfb"`
+	TxnID     string  `json:"txn_id"`
+	Type      string  `json:"type"`
+	Time      string  `json:"time"`
+	Confirmed string  `json:"confirmed"`
+	Scp       float64 `json:"scp"`
+	SpfA      float64 `json:"spfa"`
+	SpfB      float64 `json:"spfb"`
 }
 
 // ComputeSummarizedTransactions creates a set of SummarizedTransactions
@@ -97,6 +97,9 @@ func ComputeSummarizedTransactions(pts []modules.ProcessedTransaction, blockHeig
 
 		// Summarize transaction
 		st := SummarizedTransaction{}
+
+		st.Scp = incomingCoinsFloat - outgoingCoinsFloat
+
 		st.TxnID = strings.ToUpper(fmt.Sprintf("%v", txn.TransactionID))
 		st.Type = strings.ToUpper(strings.Replace(fmt.Sprintf("%v", txn.TxType), "_", " ", -1))
 		if uint64(txn.ConfirmationTimestamp) != unconfirmedTransactionTimestamp {
@@ -106,27 +109,15 @@ func ComputeSummarizedTransactions(pts []modules.ProcessedTransaction, blockHeig
 			st.Confirmed = "No"
 		}
 
-		scpAmount := incomingCoinsFloat - outgoingCoinsFloat
-		if scpAmount != 0 {
-			st.Scp = strings.TrimRight(strings.TrimRight(fmt.Sprintf("%15.4f", scpAmount), "0"), ".") + " SCP"
-		}
-
 		// For funds, need to avoid having a negative types.Currency.
 		// Doing with floats, and for display float precision is more than enough.
 		incomingSPFA, _ := incomingFundsA.Float64()
 		outgoingSPFA, _ := outgoingFundsA.Float64()
-		SPFAAmount := incomingSPFA - outgoingSPFA
+		st.SpfA = incomingSPFA - outgoingSPFA
 
 		incomingSPFB, _ := incomingFundsB.Float64()
 		outgoingSPFB, _ := outgoingFundsB.Float64()
-		SPFBAmount := incomingSPFB - outgoingSPFB
-
-		if SPFAAmount != 0 {
-			st.SpfA = fmt.Sprintf("%14v SPF-A %v\n", SPFAAmount, txn.TxType)
-		}
-		if SPFBAmount != 0 {
-			st.SpfB = fmt.Sprintf("%14v SPF-B %v\n", SPFBAmount, txn.TxType)
-		}
+		st.SpfB = incomingSPFB - outgoingSPFB
 
 		sts = append(sts, st)
 	}

@@ -176,15 +176,7 @@ func transctionHistoryCsvExportHelper(wallet modules.Wallet) (string, error) {
 	for _, txn := range sts {
 		// Format transaction type
 		if txn.Type != "SETUP" {
-			fmtSpfA := txn.SpfA
-			if fmtSpfA == "" {
-				fmtSpfA = "0"
-			}
-			fmtSpfB := txn.SpfB
-			if fmtSpfB == "" {
-				fmtSpfB = "0"
-			}
-			csv = csv + fmt.Sprintf(`"%s","%s","%s","%s","%s","%s","%s"`, txn.TxnID, txn.Type, txn.Scp, fmtSpfA, fmtSpfB, txn.Confirmed, txn.Time) + "\n"
+			csv = csv + fmt.Sprintf(`"%s","%s","%f","%f","%f","%s","%s"`, txn.TxnID, txn.Type, txn.Scp, txn.SpfA, txn.SpfB, txn.Confirmed, txn.Time) + "\n"
 		}
 	}
 	return csv, nil
@@ -1490,19 +1482,19 @@ func transactionHistoryJson(w http.ResponseWriter, req *http.Request, _ httprout
 	for i := len(sts) - 1; i >= 0; i-- {
 		txn := sts[i]
 		// Format transaction type
-		isSetup := txn.Type == "SETUP" && txn.Scp == ""
+		isSetup := txn.Type == "SETUP" && txn.Scp == 0
 		if !isSetup {
 			count++
 			if count >= pageMin && count < pageMax {
 				var amountArr []string
-				if txn.Scp != "" {
-					amountArr = append(amountArr, txn.Scp)
+				if txn.Scp != 0 {
+					amountArr = append(amountArr, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%15.4f", txn.Scp), "0"), ".")+" SCP")
 				}
-				if txn.SpfA != "" {
-					amountArr = append(amountArr, txn.SpfA)
+				if txn.SpfA != 0 {
+					amountArr = append(amountArr, fmt.Sprintf("%14v SPF-A", txn.SpfA))
 				}
-				if txn.SpfB != "" {
-					amountArr = append(amountArr, txn.SpfB)
+				if txn.SpfB != 0 {
+					amountArr = append(amountArr, fmt.Sprintf("%14v SPF-B", txn.SpfB))
 				}
 				fmtAmount := strings.Join(amountArr, "; ")
 				line := TransactionHistoryLine{}
