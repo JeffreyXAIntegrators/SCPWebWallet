@@ -60,18 +60,21 @@ func ComputeSummarizedTransactions(pts []modules.ProcessedTransaction, blockHeig
 	}
 	for _, txn := range vts {
 		// Determine the number of outgoing coins and funds.
-		var outgoingFundsA types.Currency
+		var outgoingFundsA, outgoingFundsB types.Currency
 		for _, input := range txn.Inputs {
 			if input.FundType == types.SpecifierSiafundInput && input.WalletAddress {
-				outgoingFundsA = outgoingFundsA.Add(input.Value)
+				isSPFB, err := n.ConsensusSet.IsSiafundBOutput(types.SiafundOutputID(input.ParentID))
+				if err != nil {
+					return nil, fmt.Errorf("Cannot determine if it's SPF-B input: %w", err)
+				}
+				if isSPFB {
+					outgoingFundsB = outgoingFundsB.Add(input.Value)
+				} else {
+					outgoingFundsA = outgoingFundsA.Add(input.Value)
+				}
 			}
 		}
-		var outgoingFundsB types.Currency
-		for _, input := range txn.Inputs {
-			if input.FundType == types.SpecifierSiafundB && input.WalletAddress {
-				outgoingFundsB = outgoingFundsB.Add(input.Value)
-			}
-		}
+
 		// Determine the number of incoming funds.
 		var incomingFundsA, incomingFundsB types.Currency
 		for _, output := range txn.Outputs {
