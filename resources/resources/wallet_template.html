@@ -11,19 +11,31 @@
     <div>
       <div class="grid">
         <div class="row">
+          <div>
+            <img class="scprime-logo" alt="ScPrime Web Wallet" src="/gui/logo.png"/>
+          </div>
+        </div>
+        <div class="row">
           <div class="col-5 left top no-wrap">
-            <div>
-              <img class="scprime-logo" alt="ScPrime Web Wallet" src="/gui/logo.png"/>
-            </div>
             <div>
               Web Wallet: &SESSION_NAME;
             </div>
-            &MENU;
             <div>
               <font class="status &STATUS_COLOR;">&STATUS;</font>
               Block Height:
               <font class="block_height">&BLOCK_HEIGHT;</font>
             </div>
+            <div id="balance">
+              <div>
+                <form class="inline-block" action="/gui/explainWhale?&CACHE_BUSTER;" method="post">
+                  <input type="hidden" name="session_id" value="&SESSION_ID;">
+                  <input id="whale_size_button" type="hidden" class="txid-button white" value="Whale Size: &WHALE_SIZE;">
+                </form>
+                <script>document.getElementById("whale_size_button").type="submit"</script>
+              </div>
+            </div>
+          </div>
+          <div class="col-5 left top no-wrap">
             <div id="balance">
               <div>
                 Confirmed Balance:
@@ -37,14 +49,10 @@
                 ScPrime Funds:
                 <font class="spfa_funds">&SPFA_BALANCE;</font> SPF-A; <font class="spfb_funds">&SPFB_BALANCE;</font> SPF-B
               </div>
-              <div>
-                <form class="inline-block" action="/gui/explainWhale?&CACHE_BUSTER;" method="post">
-                  <input type="hidden" name="session_id" value="&SESSION_ID;">
-                  <input id="whale_size_button" type="hidden" class="txid-button white" value="Whale Size: &WHALE_SIZE;">
-                </form>
-                <script>document.getElementById("whale_size_button").type="submit"</script>
-              </div>
             </div>
+          </div>
+          <div class="col-5 left top no-wrap">
+            &MENU;
           </div>
         </div>
       </div>

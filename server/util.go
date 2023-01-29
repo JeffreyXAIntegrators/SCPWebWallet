@@ -46,6 +46,7 @@ type SummarizedTransaction struct {
 	Time      string  `json:"time"`
 	Confirmed string  `json:"confirmed"`
 	Scp       float64 `json:"scp"`
+	ScpFee    float64 `json:"scp_fee"`
 	SpfA      float64 `json:"spfa"`
 	SpfB      float64 `json:"spfb"`
 }
@@ -61,7 +62,13 @@ func ComputeSummarizedTransactions(pts []modules.ProcessedTransaction, blockHeig
 	for _, txn := range vts {
 		// Determine the number of outgoing coins and funds.
 		var outgoingFundsA, outgoingFundsB types.Currency
+		outgoingTransaction := true
 		for _, input := range txn.Inputs {
+			//if there is at least one non-wallet input, it's not our outgoing transaction
+			if !input.WalletAddress {
+				outgoingTransaction = false
+			}
+
 			if input.FundType == types.SpecifierSiafundInput && input.WalletAddress {
 				isSPFB, err := n.ConsensusSet.IsSiafundBOutput(types.SiafundOutputID(input.ParentID))
 				if err != nil {
@@ -91,14 +98,22 @@ func ComputeSummarizedTransactions(pts []modules.ProcessedTransaction, blockHeig
 			}
 		}
 
+		var minerFee types.Currency
+		if outgoingTransaction {
+			for _, fee := range txn.Transaction.MinerFees {
+				minerFee = minerFee.Add(fee)
+			}
+		}
 		// Convert the scp to a float.
 		incomingCoinsFloat, _ := new(big.Rat).SetFrac(txn.ConfirmedIncomingValue.Big(), types.ScPrimecoinPrecision.Big()).Float64()
-		outgoingCoinsFloat, _ := new(big.Rat).SetFrac(txn.ConfirmedOutgoingValue.Big(), types.ScPrimecoinPrecision.Big()).Float64()
+		outgoingCoinsFloat, _ := new(big.Rat).SetFrac(txn.ConfirmedOutgoingValue.Sub(minerFee).Big(), types.ScPrimecoinPrecision.Big()).Float64()
 
 		// Summarize transaction
 		st := SummarizedTransaction{}
 
 		st.Scp = incomingCoinsFloat - outgoingCoinsFloat
+		scpFee, _ := new(big.Rat).SetFrac(minerFee.Big(), types.ScPrimecoinPrecision.Big()).Float64()
+		st.ScpFee = -1 * scpFee
 
 		st.TxnID = strings.ToUpper(fmt.Sprintf("%v", txn.TransactionID))
 		st.Type = strings.ToUpper(strings.Replace(fmt.Sprintf("%v", txn.TxType), "_", " ", -1))

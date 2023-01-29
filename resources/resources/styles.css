@@ -60,6 +60,9 @@ a:hover {
 a:active {
   color: #2074EE;
 }
+a.nolines{
+  text-decoration:none;
+}
 .scprime-logo {
   height: 40px;
   width: 191px;
