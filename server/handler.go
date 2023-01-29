@@ -159,7 +159,7 @@ func transactionHistoryCsvExport(w http.ResponseWriter, req *http.Request, _ htt
 }
 
 func transctionHistoryCsvExportHelper(wallet modules.Wallet) (string, error) {
-	csv := `"Transaction ID","Type","Amount SCP","Amount SPF-A","Amount SPF-B","Confirmed","DateTime"` + "\n"
+	csv := `"Transaction ID","Type","Amount SCP","Amount SPF-A","Amount SPF-B","Fee SCP", "Confirmed","DateTime"` + "\n"
 	heightMin := 0
 	confirmedTxns, err := wallet.Transactions(types.BlockHeight(heightMin), n.ConsensusSet.Height())
 	if err != nil {
@@ -176,7 +176,7 @@ func transctionHistoryCsvExportHelper(wallet modules.Wallet) (string, error) {
 	for _, txn := range sts {
 		// Format transaction type
 		if txn.Type != "SETUP" {
-			csv = csv + fmt.Sprintf(`"%s","%s","%f","%f","%f","%s","%s"`, txn.TxnID, txn.Type, txn.Scp, txn.SpfA, txn.SpfB, txn.Confirmed, txn.Time) + "\n"
+			csv = csv + fmt.Sprintf(`"%s","%s","%f","%f","%f","%f","%s","%s\n"`, txn.TxnID, txn.Type, txn.Scp, txn.SpfA, txn.SpfB, txn.ScpFee, txn.Confirmed, txn.Time)
 		}
 	}
 	return csv, nil
@@ -1473,6 +1473,7 @@ type TransactionHistoryLine struct {
 	Type               string `json:"type"`
 	Time               string `json:"time"`
 	Amount             string `json:"amount"`
+	Fee                string `json:"fee"`
 	Confirmed          string `json:"confirmed"`
 }
 
@@ -1539,12 +1540,18 @@ func transactionHistoryJson(w http.ResponseWriter, req *http.Request, _ httprout
 					amountArr = append(amountArr, fmt.Sprintf("%14v SPF-B", txn.SpfB))
 				}
 				fmtAmount := strings.Join(amountArr, "; ")
+
+				var fmtFee string
+				if txn.ScpFee != 0 {
+					fmtFee = fmt.Sprintf("%f SCP fee", txn.ScpFee)
+				}
 				line := TransactionHistoryLine{}
 				line.TransactionID = txn.TxnID
 				line.ShortTransactionID = txn.TxnID[0:16] + "..." + txn.TxnID[len(txn.TxnID)-16:]
 				line.Type = txn.Type
 				line.Time = txn.Time
 				line.Amount = fmtAmount
+				line.Fee = fmtFee
 				line.Confirmed = txn.Confirmed
 				lines = append(lines, line)
 			}

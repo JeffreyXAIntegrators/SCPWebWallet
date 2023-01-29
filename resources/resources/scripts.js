@@ -38,10 +38,13 @@ function populateTxHistoryPage(json, sessionID) {
     Transaction ID
   </h3>
   <li class="col-6 center no-wrap">
+    Date
+  </li>
+  <li class="col-6 center no-wrap">
     Amount
   </li>
   <li class="col-6 center no-wrap">
-    Date
+    Fee
   </li>
   <li class="col-6 center no-wrap">
     Confirmed
@@ -56,15 +59,18 @@ function populateTxHistoryPage(json, sessionID) {
     txHistoryPageHtml = txHistoryPageHtml + `
 <ul class="row">
   <li class="col-6 center no-wrap white-underline pad-col">
-    <a href="https://scprime.info/?search=${line.transaction_id}" target="_blank">
+    <a href="https://scprime.info/?search=${line.transaction_id}" target="_blank" class="nolines">
       ${line.short_transaction_id}
     </a>
+  </li>
+  <li class="col-6 center no-wrap white-underline pad-col">
+    ${line.time}
   </li>
   <li class="col-6 center no-wrap white-underline pad-col">
     ${line.amount}
   </li>
   <li class="col-6 center no-wrap white-underline pad-col">
-    ${line.time}
+    ${line.fee}
   </li>
   <li class="col-6 center no-wrap white-underline pad-col">
     ${line.confirmed}
