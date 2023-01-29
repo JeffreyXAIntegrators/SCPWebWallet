@@ -601,6 +601,19 @@ func sendCoinsHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Par
 			writeError(w, msg, sessionID)
 			return
 		}
+	} else if coinType == "SPF-B" {
+		amount, err := NewCurrencyStr(req.FormValue("amount") + "SPF")
+		if err != nil {
+			msg := fmt.Sprintf("%s%v", msgPrefix, err)
+			writeError(w, msg, sessionID)
+			return
+		}
+		_, err = wallet.SendSiafundbs(amount, dest)
+		if err != nil {
+			msg := fmt.Sprintf("%s%v", msgPrefix, err)
+			writeError(w, msg, sessionID)
+			return
+		}
 	} else {
 		msg := msgPrefix + "Coin type was not supplied."
 		writeError(w, msg, sessionID)
@@ -841,7 +854,8 @@ func uploadMultispendCsvHandler(w http.ResponseWriter, req *http.Request, _ http
 		return
 	}
 	var coinOutputs []types.SiacoinOutput
-	var fundOutputs []types.SiafundOutput
+	var fundAOutputs []types.SiafundOutput
+	var fundBOutputs []types.SiafundOutput
 	for _, line := range lines {
 		if line == nil {
 			continue
@@ -854,9 +868,15 @@ func uploadMultispendCsvHandler(w http.ResponseWriter, req *http.Request, _ http
 		if dest == "" {
 			continue
 		}
-		value, err := types.NewCurrencyStr(amount)
+
+		// SPF-A and SPF-B are not recognised as currency units, so just "SPF" should be supplied
+		// and different methods called for transfer
+		value, err := types.NewCurrencyStr(
+			strings.ReplaceAll(
+				strings.ReplaceAll(amount, "SPF-A", "SPF"),
+				"SPF-B", "SPF"))
 		if err != nil {
-			msg := fmt.Sprintf("%s%s%v", msgPrefix, "Could not parse amount: ", err)
+			msg := fmt.Sprintf("%sCould not parse amount: %s: %v", msgPrefix, amount, err)
 			writeError(w, msg, sessionID)
 			return
 		}
@@ -866,11 +886,16 @@ func uploadMultispendCsvHandler(w http.ResponseWriter, req *http.Request, _ http
 			writeError(w, msg, sessionID)
 			return
 		}
-		if strings.HasSuffix(amount, "SPF") {
+		if strings.HasSuffix(amount, "SPF") || strings.HasSuffix(amount, "SPF-A") {
 			var output types.SiafundOutput
 			output.Value = value
 			output.UnlockHash = hash
-			fundOutputs = append(fundOutputs, output)
+			fundAOutputs = append(fundAOutputs, output)
+		} else if strings.HasSuffix(amount, "SPF-B") {
+			var output types.SiafundOutput
+			output.Value = value
+			output.UnlockHash = hash
+			fundBOutputs = append(fundBOutputs, output)
 		} else {
 			var output types.SiacoinOutput
 			output.Value = value
@@ -878,7 +903,7 @@ func uploadMultispendCsvHandler(w http.ResponseWriter, req *http.Request, _ http
 			coinOutputs = append(coinOutputs, output)
 		}
 	}
-	if len(coinOutputs) == 0 && len(fundOutputs) == 0 {
+	if len(coinOutputs) == 0 && len(fundAOutputs) == 0 && len(fundBOutputs) == 0 {
 		msg := fmt.Sprintf("%s%s%v", msgPrefix, "No ScPrime outputs were supplied: ", err)
 		writeError(w, msg, sessionID)
 		return
@@ -900,8 +925,17 @@ func uploadMultispendCsvHandler(w http.ResponseWriter, req *http.Request, _ http
 		writeError(w, msg, sessionID)
 		return
 	}
-	// Mock the transaction to verify that the wallet is able to fund both transactions.
-	txnBuilder, err := wallet.BuildUnsignedBatchTransaction(coinOutputs, fundOutputs, nil)
+	// Mock the transaction to verify that the wallet is able to fund all transactions.
+	// SPF-A and SPF-B cannot be sent in same transaction
+	txnBuilder, err := wallet.BuildUnsignedBatchTransaction(coinOutputs, fundAOutputs, nil)
+	if err != nil {
+		msg := fmt.Sprintf("%s%v", msgPrefix, err)
+		writeError(w, msg, sessionID)
+		return
+	}
+	txnBuilder.Drop()
+	// test SCP+SPF-B
+	txnBuilder, err = wallet.BuildUnsignedBatchTransaction(coinOutputs, nil, fundBOutputs)
 	if err != nil {
 		msg := fmt.Sprintf("%s%v", msgPrefix, err)
 		writeError(w, msg, sessionID)
@@ -917,8 +951,16 @@ func uploadMultispendCsvHandler(w http.ResponseWriter, req *http.Request, _ http
 			return
 		}
 	}
-	if len(fundOutputs) != 0 {
-		_, err = wallet.SendBatchTransaction(nil, fundOutputs, nil)
+	if len(fundAOutputs) != 0 {
+		_, err = wallet.SendBatchTransaction(nil, fundAOutputs, nil)
+		if err != nil {
+			msg := fmt.Sprintf("%s%v", msgPrefix, err)
+			writeError(w, msg, sessionID)
+			return
+		}
+	}
+	if len(fundBOutputs) != 0 {
+		_, err = wallet.SendBatchTransaction(nil, nil, fundBOutputs)
 		if err != nil {
 			msg := fmt.Sprintf("%s%v", msgPrefix, err)
 			writeError(w, msg, sessionID)
