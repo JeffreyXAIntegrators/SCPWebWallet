@@ -41,12 +41,13 @@ var (
 // SummarizedTransaction is a transaction that has been formatted for·
 // humans to read.
 type SummarizedTransaction struct {
-	TxnID     string `json:"txn_id"`
-	Type      string `json:"type"`
-	Time      string `json:"time"`
-	Confirmed string `json:"confirmed"`
-	Scp       string `json:"scp"`
-	Spf       string `json:"spf"`
+	TxnID     string  `json:"txn_id"`
+	Type      string  `json:"type"`
+	Time      string  `json:"time"`
+	Confirmed string  `json:"confirmed"`
+	Scp       float64 `json:"scp"`
+	SpfA      float64 `json:"spfa"`
+	SpfB      float64 `json:"spfb"`
 }
 
 // ComputeSummarizedTransactions creates a set of SummarizedTransactions
@@ -59,24 +60,46 @@ func ComputeSummarizedTransactions(pts []modules.ProcessedTransaction, blockHeig
 	}
 	for _, txn := range vts {
 		// Determine the number of outgoing coins and funds.
-		var outgoingFunds types.Currency
+		var outgoingFundsA, outgoingFundsB types.Currency
 		for _, input := range txn.Inputs {
 			if input.FundType == types.SpecifierSiafundInput && input.WalletAddress {
-				outgoingFunds = outgoingFunds.Add(input.Value)
+				isSPFB, err := n.ConsensusSet.IsSiafundBOutput(types.SiafundOutputID(input.ParentID))
+				if err != nil {
+					return nil, fmt.Errorf("Cannot determine if it's SPF-B input: %w", err)
+				}
+				if isSPFB {
+					outgoingFundsB = outgoingFundsB.Add(input.Value)
+				} else {
+					outgoingFundsA = outgoingFundsA.Add(input.Value)
+				}
 			}
 		}
+
 		// Determine the number of incoming funds.
-		var incomingFunds types.Currency
+		var incomingFundsA, incomingFundsB types.Currency
 		for _, output := range txn.Outputs {
 			if output.FundType == types.SpecifierSiafundOutput && output.WalletAddress {
-				incomingFunds = incomingFunds.Add(output.Value)
+				isSPFB, err := n.ConsensusSet.IsSiafundBOutput(types.SiafundOutputID(output.ID))
+				if err != nil {
+					return nil, fmt.Errorf("Cannot determine if it's SPF-B output: %w", err)
+				}
+				if isSPFB {
+					incomingFundsB = incomingFundsB.Add(output.Value)
+				} else {
+					incomingFundsA = incomingFundsA.Add(output.Value)
+				}
 			}
 		}
+
 		// Convert the scp to a float.
 		incomingCoinsFloat, _ := new(big.Rat).SetFrac(txn.ConfirmedIncomingValue.Big(), types.ScPrimecoinPrecision.Big()).Float64()
 		outgoingCoinsFloat, _ := new(big.Rat).SetFrac(txn.ConfirmedOutgoingValue.Big(), types.ScPrimecoinPrecision.Big()).Float64()
+
 		// Summarize transaction
 		st := SummarizedTransaction{}
+
+		st.Scp = incomingCoinsFloat - outgoingCoinsFloat
+
 		st.TxnID = strings.ToUpper(fmt.Sprintf("%v", txn.TransactionID))
 		st.Type = strings.ToUpper(strings.Replace(fmt.Sprintf("%v", txn.TxType), "_", " ", -1))
 		if uint64(txn.ConfirmationTimestamp) != unconfirmedTransactionTimestamp {
@@ -85,13 +108,17 @@ func ComputeSummarizedTransactions(pts []modules.ProcessedTransaction, blockHeig
 		} else {
 			st.Confirmed = "No"
 		}
-		st.Scp = fmt.Sprintf("%15.2f SCP", incomingCoinsFloat-outgoingCoinsFloat)
+
 		// For funds, need to avoid having a negative types.Currency.
-		if incomingFunds.Cmp(outgoingFunds) > 0 {
-			st.Spf = fmt.Sprintf("%14v SPF %v\n", incomingFunds.Sub(outgoingFunds), txn.TxType)
-		} else if incomingFunds.Cmp(outgoingFunds) < 0 {
-			st.Spf = fmt.Sprintf("-%14v SPF %v\n", outgoingFunds.Sub(incomingFunds), txn.TxType)
-		}
+		// Doing with floats, and for display float precision is more than enough.
+		incomingSPFA, _ := incomingFundsA.Float64()
+		outgoingSPFA, _ := outgoingFundsA.Float64()
+		st.SpfA = incomingSPFA - outgoingSPFA
+
+		incomingSPFB, _ := incomingFundsB.Float64()
+		outgoingSPFB, _ := outgoingFundsB.Float64()
+		st.SpfB = incomingSPFB - outgoingSPFB
+
 		sts = append(sts, st)
 	}
 	return sts, nil
