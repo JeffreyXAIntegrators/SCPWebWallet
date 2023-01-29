@@ -38,9 +38,6 @@ function populateTxHistoryPage(json, sessionID) {
     Transaction ID
   </h3>
   <li class="col-6 center no-wrap">
-    Type
-  </li>
-  <li class="col-6 center no-wrap">
     Amount
   </li>
   <li class="col-6 center no-wrap">
@@ -58,15 +55,10 @@ function populateTxHistoryPage(json, sessionID) {
     const note = localStorage.getItem('note-'+line.short_transaction_id)
     txHistoryPageHtml = txHistoryPageHtml + `
 <ul class="row">
-  <h3 class="col-6 center no-wrap monospace white-underline pad-col">
-    <form class="inline-block input-wide" action="/gui/explorer?${cacheBuster}" method="post">
-      <input type="hidden" name="session_id" value="${sessionID}">
-      <input type="hidden" name="transaction_id" value="${line.transaction_id}">
-      <input class="txid-button" type="submit" value="${line.short_transaction_id}">
-    </form>
-  </h3>
   <li class="col-6 center no-wrap white-underline pad-col">
-    ${line.type}
+    <a href="https://scprime.info/?search=${line.transaction_id}" target="_blank">
+      ${line.short_transaction_id}
+    </a>
   </li>
   <li class="col-6 center no-wrap white-underline pad-col">
     ${line.amount}
