@@ -9,6 +9,10 @@ button {
   font-size: 16px;
   padding: 14px 40px;
 }
+.initBtn {
+  width: 50%;
+  padding: 14px 10px;
+}
 .txid-button {
   align-items: normal;
   background-color: rgba(0,0,0,0);
