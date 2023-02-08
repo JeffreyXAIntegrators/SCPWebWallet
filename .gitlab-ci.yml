@@ -92,6 +92,10 @@ Build Signed Binaries:
 Upload Binaries to Releases Site:
   stage: Release
   when: manual
+  image: alpine:3.17
   needs: 
     - Build Signed Binaries
-  script: echo "This is where we need to copy them into place"
+  script: 
+    - apk add sshpass scp
+    - ls -la $CI_PROJECT_DIR/release
+    - sshpass -p '$releases_password' ssh -o 'StrictHostKeyChecking=no' scp -p 22200 $CI_PROJECT_DIR/release $releases_username@135.148.5.112:~/test/
