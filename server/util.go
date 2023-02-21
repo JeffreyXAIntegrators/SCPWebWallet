@@ -16,6 +16,9 @@ const (
 	// For an unconfirmed Transaction, the TransactionTimestamp field is set to the
 	// maximum value of a uint64.
 	unconfirmedTransactionTimestamp = ^uint64(0)
+
+	_stConfirmedStr   = "Yes"
+	_stUnconfirmedStr = "No"
 )
 
 var (
@@ -53,13 +56,25 @@ type SummarizedTransaction struct {
 
 // ComputeSummarizedTransactions creates a set of SummarizedTransactions
 // from a set of ProcessedTransactions.
-func ComputeSummarizedTransactions(pts []modules.ProcessedTransaction, blockHeight types.BlockHeight) ([]SummarizedTransaction, error) {
+func ComputeSummarizedTransactions(pts []modules.ProcessedTransaction, blockHeight types.BlockHeight, wwallet modules.Wallet) ([]SummarizedTransaction, error) {
 	sts := []SummarizedTransaction{}
 	vts, err := wallet.ComputeValuedTransactions(pts, blockHeight)
 	if err != nil {
 		return nil, err
 	}
 	for _, txn := range vts {
+		// Summarize transaction
+		st := SummarizedTransaction{}
+		st.TxnID = strings.ToUpper(fmt.Sprintf("%v", txn.TransactionID))
+		st.Type = strings.ToUpper(strings.Replace(fmt.Sprintf("%v", txn.TxType), "_", " ", -1))
+
+		if uint64(txn.ConfirmationTimestamp) != unconfirmedTransactionTimestamp {
+			st.Time = time.Unix(int64(txn.ConfirmationTimestamp), 0).Format("2006-01-02 15:04")
+			st.Confirmed = _stConfirmedStr
+		} else {
+			st.Confirmed = _stUnconfirmedStr
+		}
+
 		// Determine the number of outgoing coins and funds.
 		var outgoingFundsA, outgoingFundsB types.Currency
 		outgoingTransaction := true
@@ -98,6 +113,32 @@ func ComputeSummarizedTransactions(pts []modules.ProcessedTransaction, blockHeig
 			}
 		}
 
+		//Looking into unconfirmed setup transactions to display unconfirmed SPFs
+		if txn.TxType == modules.TXTypeSetup && st.Confirmed == _stUnconfirmedStr {
+			//no mixing of SPF-A and B, so all inputs (and outputs) will be of same type
+			// SiafundOutput struct does not carry an ID, so we cannot check for SPF type in outputs
+			isSPFB := false
+			for _, input := range txn.Transaction.SiafundInputs {
+				isSPFB, err = n.ConsensusSet.IsSiafundBOutput(types.SiafundOutputID(input.ParentID))
+				if err != nil {
+					return nil, fmt.Errorf("Cannot determine if it's SPF-B input: %w", err)
+				}
+			}
+
+			for _, output := range txn.Transaction.SiafundOutputs {
+				if wwallet.IsWatchedAddress(output.UnlockHash) {
+					if isSPFB {
+						incomingFundsB = incomingFundsB.Add(output.Value)
+					} else {
+						incomingFundsA = incomingFundsA.Add(output.Value)
+					}
+				} else if isSPFB {
+					outgoingFundsB = outgoingFundsB.Add(output.Value)
+				} else {
+					outgoingFundsA = outgoingFundsA.Add(output.Value)
+				}
+			}
+		}
 		var minerFee types.Currency
 		if outgoingTransaction {
 			for _, fee := range txn.Transaction.MinerFees {
@@ -108,21 +149,9 @@ func ComputeSummarizedTransactions(pts []modules.ProcessedTransaction, blockHeig
 		incomingCoinsFloat, _ := new(big.Rat).SetFrac(txn.ConfirmedIncomingValue.Big(), types.ScPrimecoinPrecision.Big()).Float64()
 		outgoingCoinsFloat, _ := new(big.Rat).SetFrac(txn.ConfirmedOutgoingValue.Sub(minerFee).Big(), types.ScPrimecoinPrecision.Big()).Float64()
 
-		// Summarize transaction
-		st := SummarizedTransaction{}
-
 		st.Scp = incomingCoinsFloat - outgoingCoinsFloat
 		scpFee, _ := new(big.Rat).SetFrac(minerFee.Big(), types.ScPrimecoinPrecision.Big()).Float64()
 		st.ScpFee = -1 * scpFee
-
-		st.TxnID = strings.ToUpper(fmt.Sprintf("%v", txn.TransactionID))
-		st.Type = strings.ToUpper(strings.Replace(fmt.Sprintf("%v", txn.TxType), "_", " ", -1))
-		if uint64(txn.ConfirmationTimestamp) != unconfirmedTransactionTimestamp {
-			st.Time = time.Unix(int64(txn.ConfirmationTimestamp), 0).Format("2006-01-02 15:04")
-			st.Confirmed = "Yes"
-		} else {
-			st.Confirmed = "No"
-		}
 
 		// For funds, need to avoid having a negative types.Currency.
 		// Doing with floats, and for display float precision is more than enough.
