@@ -1534,7 +1534,11 @@ func transactionHistoryJson(w http.ResponseWriter, req *http.Request, _ httprout
 					amountArr = append(amountArr, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%15.4f", txn.Scp), "0"), ".")+" SCP")
 				}
 				if txn.SpfA != 0 {
-					amountArr = append(amountArr, fmt.Sprintf("%14v SPF-A", txn.SpfA))
+					postfix := "SPF-A"
+					if txn.Confirmed == _stUnconfirmedStr { // in case of unconfirmed we just show SPF
+						postfix = "SPF"
+					}
+					amountArr = append(amountArr, fmt.Sprintf("%14v %s", txn.SpfA, postfix))
 				}
 				if txn.SpfB != 0 {
 					amountArr = append(amountArr, fmt.Sprintf("%14v SPF-B", txn.SpfB))

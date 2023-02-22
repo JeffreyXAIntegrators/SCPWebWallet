@@ -115,25 +115,10 @@ func ComputeSummarizedTransactions(pts []modules.ProcessedTransaction, blockHeig
 
 		//Looking into unconfirmed setup transactions to display unconfirmed SPFs
 		if txn.TxType == modules.TXTypeSetup && st.Confirmed == _stUnconfirmedStr {
-			//no mixing of SPF-A and B, so all inputs (and outputs) will be of same type
-			// SiafundOutput struct does not carry an ID, so we cannot check for SPF type in outputs
-			isSPFB := false
-			for _, input := range txn.Transaction.SiafundInputs {
-				isSPFB, err = n.ConsensusSet.IsSiafundBOutput(types.SiafundOutputID(input.ParentID))
-				if err != nil {
-					return nil, fmt.Errorf("Cannot determine if it's SPF-B input: %w", err)
-				}
-			}
-
+			//we unable to detect if unconfirmed SPF is A or B, so we default to A, but will handle in display just as "SPF"
 			for _, output := range txn.Transaction.SiafundOutputs {
 				if wwallet.IsWatchedAddress(output.UnlockHash) {
-					if isSPFB {
-						incomingFundsB = incomingFundsB.Add(output.Value)
-					} else {
-						incomingFundsA = incomingFundsA.Add(output.Value)
-					}
-				} else if isSPFB {
-					outgoingFundsB = outgoingFundsB.Add(output.Value)
+					incomingFundsA = incomingFundsA.Add(output.Value)
 				} else {
 					outgoingFundsA = outgoingFundsA.Add(output.Value)
 				}
