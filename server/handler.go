@@ -176,7 +176,7 @@ func transctionHistoryCsvExportHelper(wallet modules.Wallet) (string, error) {
 	for _, txn := range sts {
 		// Format transaction type
 		if txn.Type != "SETUP" {
-			csv = csv + fmt.Sprintf(`"%s","%s","%f","%f","%f","%f","%s","%s\n"`, txn.TxnID, txn.Type, txn.Scp, txn.SpfA, txn.SpfB, txn.ScpFee, txn.Confirmed, txn.Time)
+			csv = csv + fmt.Sprintf(`"%s","%s","%f","%f","%f","%f","%s","%s"`, txn.TxnID, txn.Type, txn.Scp, txn.SpfA, txn.SpfB, txn.ScpFee, txn.Confirmed, txn.Time) + "\n"
 		}
 	}
 	return csv, nil
