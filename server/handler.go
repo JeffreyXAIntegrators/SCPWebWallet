@@ -169,7 +169,7 @@ func transctionHistoryCsvExportHelper(wallet modules.Wallet) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	sts, err := ComputeSummarizedTransactions(append(confirmedTxns, unconfirmedTxns...), n.ConsensusSet.Height())
+	sts, err := ComputeSummarizedTransactions(append(confirmedTxns, unconfirmedTxns...), n.ConsensusSet.Height(), wallet)
 	if err != nil {
 		return "", err
 	}
@@ -1514,7 +1514,7 @@ func transactionHistoryJson(w http.ResponseWriter, req *http.Request, _ httprout
 		w.Write([]byte(fmt.Sprintf(msgPrefix+"%v", err)))
 		return
 	}
-	sts, err := ComputeSummarizedTransactions(append(confirmedTxns, unconfirmedTxns...), n.ConsensusSet.Height())
+	sts, err := ComputeSummarizedTransactions(append(confirmedTxns, unconfirmedTxns...), n.ConsensusSet.Height(), wallet)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(fmt.Sprintf(msgPrefix+"%v", err)))
@@ -1525,7 +1525,7 @@ func transactionHistoryJson(w http.ResponseWriter, req *http.Request, _ httprout
 	for i := len(sts) - 1; i >= 0; i-- {
 		txn := sts[i]
 		// Format transaction type
-		isSetup := txn.Type == "SETUP" && txn.Scp == 0
+		isSetup := txn.Type == "SETUP" && txn.Scp == 0 && txn.SpfA == 0 && txn.SpfB == 0
 		if !isSetup {
 			count++
 			if count >= pageMin && count < pageMax {
@@ -1534,13 +1534,19 @@ func transactionHistoryJson(w http.ResponseWriter, req *http.Request, _ httprout
 					amountArr = append(amountArr, strings.TrimRight(strings.TrimRight(fmt.Sprintf("%15.4f", txn.Scp), "0"), ".")+" SCP")
 				}
 				if txn.SpfA != 0 {
-					amountArr = append(amountArr, fmt.Sprintf("%14v SPF-A", txn.SpfA))
+					postfix := "SPF-A"
+					if txn.Confirmed == _stUnconfirmedStr { // in case of unconfirmed we just show SPF
+						postfix = "SPF"
+					}
+					amountArr = append(amountArr, fmt.Sprintf("%14v %s", txn.SpfA, postfix))
 				}
 				if txn.SpfB != 0 {
 					amountArr = append(amountArr, fmt.Sprintf("%14v SPF-B", txn.SpfB))
 				}
 				fmtAmount := strings.Join(amountArr, "; ")
-
+				if fmtAmount == "" {
+					fmtAmount = "0 SCP/SPF"
+				}
 				var fmtFee string
 				if txn.ScpFee != 0 {
 					fmtFee = fmt.Sprintf("%f SCP fee", txn.ScpFee)

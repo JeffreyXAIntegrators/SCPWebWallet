@@ -56,8 +56,12 @@ function populateTxHistoryPage(json, sessionID) {
 `
   for (const line of txHistoryPage) {
     const note = localStorage.getItem('note-'+line.short_transaction_id)
+    if (line.confirmed == "No") {
+      txHistoryPageHtml = txHistoryPageHtml + `<ul class="row-gray">`
+    } else {
+      txHistoryPageHtml = txHistoryPageHtml + `<ul class="row">`
+    }
     txHistoryPageHtml = txHistoryPageHtml + `
-<ul class="row">
   <li class="col-6 center no-wrap white-underline pad-col">
     <a href="https://scprime.info/?search=${line.transaction_id}" target="_blank" class="nolines">
       ${line.short_transaction_id}

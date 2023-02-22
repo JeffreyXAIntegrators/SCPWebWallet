@@ -96,6 +96,7 @@ a.nolines{
 .pad-col {padding: .5rem;}
 .grid {display:table;width: 100%;}
 .row {display:table-row;width: 100%;}
+.row-gray {display:table-row;width: 100%;color:gray}
 .col-1 {display: table-cell;width: 100%;}
 .col-2 {display: table-cell;width: 50%;}
 .col-3 {display: table-cell;width: 33%;}
