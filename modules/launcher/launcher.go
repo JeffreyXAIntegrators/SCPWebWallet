@@ -28,6 +28,7 @@ var additionalArgs = []string{
 	"--no-first-run",
 	"--no-default-browser-check",
 	"--safebrowsing-disable-auto-update",
+	"--remote-allow-origins=*",
 }
 
 var width = 1366
