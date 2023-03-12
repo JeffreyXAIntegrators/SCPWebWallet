@@ -85,3 +85,4 @@ This will save the signed `scp-webwallet` release binaries to the webwallet's `.
 [ScPrime Documents repository]: https://docs.scpri.me/software/webwallet
 [Go 1.17 or above]: https://golang.org/doc/install
 
+
