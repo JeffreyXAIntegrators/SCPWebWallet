@@ -3,7 +3,7 @@ module gitlab.com/scpcorp/webwallet
 go 1.17
 
 require (
-	github.com/georgemcarlson/lorca v0.1.13
+	github.com/georgemcarlson/lorca v0.1.15
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/ncruces/zenity v0.8.9
 	gitlab.com/NebulousLabs/entropy-mnemonics v0.0.0-20181018051301-7532f67e3500
