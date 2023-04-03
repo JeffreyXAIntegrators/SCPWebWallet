@@ -111,6 +111,9 @@ var expandedMenuForm string
 //go:embed resources/forms/explain_whale.html
 var explainWhaleForm string
 
+//go:embed resources/forms/import_export_notes.html
+var importExportNotesForm string
+
 // Logo returns the Logo.
 func Logo() []byte {
 	return logo
@@ -284,4 +287,9 @@ func ExplainWhaleForm() string {
 // CollapsedMenuForm returns the HTML form
 func CollapsedMenuForm() string {
 	return collapsedMenuForm
+}
+
+// ImportExportNotesForm returns notes import and export form
+func ImportExportNotesForm() string {
+	return importExportNotesForm
 }

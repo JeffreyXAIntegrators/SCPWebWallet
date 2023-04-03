@@ -1,0 +1,106 @@
+<div class="middle pad-bottom anti-pad-top">
+  <h3>Export Notes</h3>
+  <div class="left">
+    <p>Export all notes to a JSON file.</p>
+  </div>
+  <div class="middle">
+    <button type="button" class="middle" onclick="getLocalstorageToFile('download.json');">Export notes</button>
+  </div>
+</div>
+
+<div class="middle pad-bottom thin-blue-dashed">
+  <h3>Import Notes</h3>
+  <div class="left">
+    <div>
+      <p>Import notes from a JSON file.</p>
+      <input type="radio" id="radio_merge_skip" name="merge_type" value="skip_existing" checked>
+      <label for="merge_skip">Skip existing note entries</label><br>
+      <input type="radio" id="radio_merge_overwrite" name="merge_type" value="overwrite_existing">
+      <label for="merge_overwrite">Overwrite existing note entries</label><br>
+    </div>
+
+    <div class="pad">
+      <input type="file" id="import_file" accept=".json">
+    </div>
+  </div>
+
+  <div class="middle">
+    <button type="button" onclick="readImportFile()">Import notes</button>
+  </div>
+</div>
+
+<div class='pad blue-dashed'>
+  <div class="inline-block">
+    <form action="/gui/importExportNotesCancel?&CACHE_BUSTER;" method="post" enctype="multipart/form-data">
+      <input type="hidden" name="session_id" value="&SESSION_ID;">
+      <button name="cancel" value="true" type="submit">Close</button>
+    </form>
+  </div>
+</div>
+
+<script>
+  var fileList
+  function readImportFile() {
+    if (fileList == null || fileList.length == 0) {
+      errMsg = "Error: No file provided"
+      console.log(errMsg);
+      alert(errMsg)
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = function (e) {
+      output = e.target.result;
+      console.log(output)
+      var o = JSON.parse(output);
+      for (var property in o) {
+        if (o.hasOwnProperty(property)) {
+          if (localStorage.getItem(property) === null || 
+            localStorage.getItem(property) == "" || 
+            document.getElementById("radio_merge_overwrite").checked) {
+            localStorage.setItem(property, o[property]);
+          }
+        }
+      }
+      alert("Import complete")
+    };//end onload()
+    reader.readAsText(fileList[0]);
+  }
+
+  const fileSelector = document.getElementById('import_file');
+  fileSelector.addEventListener('change', (event) => {
+    fileList = event.target.files;
+  });
+
+  function getLocalstorageToFile(fileName) {
+    var a = {};
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i);
+      if (k.startsWith("note-")) {
+        var v = localStorage.getItem(k);
+        a[k] = v;
+      }
+    }
+
+    /* save as blob */
+    var textToSave = JSON.stringify(a)
+    var textToSaveAsBlob = new Blob([textToSave], {
+      type: "text/plain"
+    });
+    var textToSaveAsURL = window.URL.createObjectURL(textToSaveAsBlob);
+
+    /* download without button */
+
+    var downloadLink = document.createElement("a");
+    downloadLink.download = fileName;
+    downloadLink.innerHTML = "Download File";
+    downloadLink.href = textToSaveAsURL;
+    downloadLink.onclick = function () {
+      document.body.removeChild(event.target);
+    };
+    downloadLink.style.display = "none";
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+  }
+</script>
