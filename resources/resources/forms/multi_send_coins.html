@@ -1,7 +1,7 @@
 <div>
   Send ScPrime coins and funds to multiple addresses in the same transaction as defined in the supplied CSV file.
   The first column must be the amount of ScPrime coins or funds to send specified in units,
-  e.g. 1.23KS, 1230SCP, 30SPF, 30SPF-A or 10SPF-B.
+  e.g. 1230SCP, 30SPF, 30SPF-A or 10SPF-B. If no units are specified, default unit type will be used.
   The second column must be the 76-byte hexadecimal address.
   <p>
   SPF-A and SPF-B do not support fractional units.
@@ -14,7 +14,17 @@
 </div>
 <form action="/gui/uploadMultispendCsv?&CACHE_BUSTER;" method="post" enctype="multipart/form-data">
   <input type="hidden" name="session_id" value="&SESSION_ID;">
-  <div class='pad'>CSV: <input name="file" type="file" multiple /></div>
+  <div class='pad left'>
+    <label for="default_unit">Default unit: </label>
+    <select name="default_unit" id="default_unit">
+      <option value="SCP">SCP</option>
+      <option value="SPF-A">SPF-A</option>
+      <option value="SPF-B">SPF-B</option>
+    </select>
+    <br>
+    <label for="file">CSV: </label>
+    <input name="file" type="file" multiple />
+  </div>
   <div class='pad blue-dashed'>
     <div class="inline-block">
       <button type="submit">Send Coins</button>

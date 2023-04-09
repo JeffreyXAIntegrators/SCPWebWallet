@@ -840,6 +840,11 @@ func uploadMultispendCsvHandler(w http.ResponseWriter, req *http.Request, _ http
 		guiHandler(w, req, nil)
 		return
 	}
+	defaultUnit := req.FormValue("default_unit")
+	if defaultUnit != "SCP" && defaultUnit != "SPF-A" && defaultUnit != "SPF-B" {
+		defaultUnit = "SCP"
+	}
+
 	file, _, err := req.FormFile("file")
 	if err != nil {
 		msg := fmt.Sprintf("%s%s%v", msgPrefix, "Unable to upload multispend csv file: ", err)
@@ -867,6 +872,11 @@ func uploadMultispendCsvHandler(w http.ResponseWriter, req *http.Request, _ http
 		dest := line[1]
 		if dest == "" {
 			continue
+		}
+
+		//add default unit if there is none (verified by successful string parse into float)
+		if _, err := strconv.ParseFloat(amount, 64); err == nil {
+			amount += defaultUnit
 		}
 
 		// SPF-A and SPF-B are not recognised as currency units, so just "SPF" should be supplied
