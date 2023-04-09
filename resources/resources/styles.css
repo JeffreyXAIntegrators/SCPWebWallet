@@ -92,7 +92,10 @@ a.nolines{
 .cursor-help {
   cursor: help;
 }
+.small-button {padding: 0px 5px;}
 .pad {padding: 20px;}
+.pad-bottom {padding-bottom: 20px;}
+.anti-pad-top {margin-top: -20px;}
 .pad-col {padding: .5rem;}
 .grid {display:table;width: 100%;}
 .row {display:table-row;width: 100%;}
@@ -116,6 +119,7 @@ a.nolines{
 .white-bar {border-left: 1px solid #FFFFFF; padding-left: .5rem;}
 .white-underline {border-bottom: 1px solid #FFFFFF;}
 .blue-dashed {border-top:2px dashed #2074EE;}
+.thin-blue-dashed {border-top:1px dashed #2074EE;}
 .blue-bg {background-color: #2074EE;}
 .fade {
   position: absolute;

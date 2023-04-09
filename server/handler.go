@@ -970,6 +970,30 @@ func uploadMultispendCsvHandler(w http.ResponseWriter, req *http.Request, _ http
 	guiHandler(w, req, nil)
 }
 
+func importExportNotesFormHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
+	sessionID := req.FormValue("session_id")
+	if sessionID == "" || !sessionIDExists(sessionID) {
+		msg := "Session ID does not exist."
+		writeError(w, msg, "")
+	}
+	title := "IMPORT / EXPORT NOTES"
+	form := resources.ImportExportNotesForm()
+	writeForm(w, title, form, sessionID)
+}
+
+func importExportNotesCancelHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
+	sessionID := req.FormValue("session_id")
+	if sessionID == "" || !sessionIDExists(sessionID) {
+		msg := "Session ID does not exist."
+		writeError(w, msg, "")
+	}
+	cancel := req.FormValue("cancel")
+	if cancel == "true" {
+		guiHandler(w, req, nil)
+		return
+	}
+}
+
 func uploadConsensusSetFormHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
 	writeStaticHTML(w, resources.ConsensusSetUploadingHTML(), "")
 }

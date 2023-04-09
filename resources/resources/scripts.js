@@ -51,6 +51,10 @@ function populateTxHistoryPage(json, sessionID) {
   </li>
   <li class="col-6 center no-wrap">
     Notes
+    <form class="inline-block" action="/gui/importExportNotesForm?&CACHE_BUSTER;" method="post">
+      <input type="hidden" name="session_id" value="`+sessionID+`">
+      <button class="small-button" title="Import/Export notes" type="submit">⇅</button>
+    </form>
   </li>
 </ul>
 `
