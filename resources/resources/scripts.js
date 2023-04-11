@@ -67,7 +67,7 @@ function populateTxHistoryPage(json, sessionID) {
     }
     txHistoryPageHtml = txHistoryPageHtml + `
   <li class="col-6 center no-wrap white-underline pad-col">
-    <a href="https://scprime.info/?search=${line.transaction_id}" target="_blank" class="nolines">
+    <a href="https://explorer.scpri.me/?search=${line.transaction_id}" target="_blank" class="nolines">
       ${line.short_transaction_id}
     </a>
   </li>
