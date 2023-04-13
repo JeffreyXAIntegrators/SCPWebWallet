@@ -1,5 +1,6 @@
 # [![ScPrime WebWallet][ScPrime Logo]][ScPrime]
 
+
 [![Latest Release][Latest Release Badge]][Latest Releases]
 [![Build Status][Build Status Badge]][Commit History]
 [![GoDoc][GoDoc Badge]][GoDoc SCP Corp Web Wallet]
