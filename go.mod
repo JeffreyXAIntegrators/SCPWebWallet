@@ -9,7 +9,7 @@ require (
 	gitlab.com/NebulousLabs/entropy-mnemonics v0.0.0-20181018051301-7532f67e3500
 	gitlab.com/NebulousLabs/errors v0.0.0-20200929122200-06c536cf6975
 	gitlab.com/NebulousLabs/fastrand v0.0.0-20181126182046-603482d69e40
-	gitlab.com/scpcorp/ScPrime v1.7.2
+	gitlab.com/scpcorp/ScPrime v1.8.0
 )
 
 require (

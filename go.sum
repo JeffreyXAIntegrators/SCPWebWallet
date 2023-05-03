@@ -115,10 +115,6 @@ github.com/fatih/color v1.9.0/go.mod h1:eQcE1qtQxscV5RaZvpXrrb8Drkc3/DdQ+uUYCNjL
 github.com/fatih/color v1.13.0/go.mod h1:kLAiJbzzSOZDVNGyDpeOxJ47H46qBXwg5ILebYFFOfk=
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
 github.com/fsnotify/fsnotify v1.5.1/go.mod h1:T3375wBYaZdLLcVNkcVbzGHY7f1l/uK5T5Ai1i3InKU=
-github.com/georgemcarlson/lorca v0.1.13 h1:9FoUEJMcECbHw3V5ZrTHv33NOz2iesKN5Y4dmygq9Io=
-github.com/georgemcarlson/lorca v0.1.13/go.mod h1:fPzsM3aJqK6H44Ju0c/3qi1S8BrqSrec08MizmheYVc=
-github.com/georgemcarlson/lorca v0.1.14 h1:vMXBLmvtriqZ/aCobYI6HP7tHJHZgTZ2bPRHAQFGZtA=
-github.com/georgemcarlson/lorca v0.1.14/go.mod h1:fPzsM3aJqK6H44Ju0c/3qi1S8BrqSrec08MizmheYVc=
 github.com/georgemcarlson/lorca v0.1.15 h1:ukv9SBQ1TZ1ndYRckv0TbYaEqd4yS02t61Ze4OuDMDA=
 github.com/georgemcarlson/lorca v0.1.15/go.mod h1:fPzsM3aJqK6H44Ju0c/3qi1S8BrqSrec08MizmheYVc=
 github.com/getkin/kin-openapi v0.49.0/go.mod h1:ZJSfy1PxJv2QQvH9EdBj3nupRTVvV42mkW6zKUlRBwk=
@@ -445,8 +441,8 @@ gitlab.com/NebulousLabs/siamux v0.0.0-20211123104731-05f52227c71f h1:bFDVIgWyIDP
 gitlab.com/NebulousLabs/siamux v0.0.0-20211123104731-05f52227c71f/go.mod h1:owMSVLlMMCSK6tfhfSshZhrsIFCUNvQEsiGZoWhaXcc=
 gitlab.com/NebulousLabs/threadgroup v0.0.0-20200608151952-38921fbef213 h1:owERlKtUEFTPQ897iiqWPOuWBdq7BYqPxDOCgEZnbN4=
 gitlab.com/NebulousLabs/threadgroup v0.0.0-20200608151952-38921fbef213/go.mod h1:vIutAvl7lmJqLVYTCBY5WDdJomP+V74At8LCeEYoH8w=
-gitlab.com/scpcorp/ScPrime v1.7.2 h1:hxDCM92PpcQtXgk1eUgowdKFWSv2LpvNyj/HXegehXE=
-gitlab.com/scpcorp/ScPrime v1.7.2/go.mod h1:yHMpIuQ1yGrPqED3d5l8w7EWBMhSmW1ZEUWO1vkCW2Y=
+gitlab.com/scpcorp/ScPrime v1.8.0 h1:Jv7diYFB0Su76ei7xZjiVAlTT0xh6ATpFb17ej+F/Vc=
+gitlab.com/scpcorp/ScPrime v1.8.0/go.mod h1:yHMpIuQ1yGrPqED3d5l8w7EWBMhSmW1ZEUWO1vkCW2Y=
 gitlab.com/scpcorp/merkletree v0.0.0-20220107002940-1145778ea123 h1:AqLMGcDTreQkAm4Vh1H4r335UN5FtolMHk/9kItWU78=
 gitlab.com/scpcorp/merkletree v0.0.0-20220107002940-1145778ea123/go.mod h1:3CWUfXmsEjKSv7z1ReNQzdDEl1Qg4FTYXWQf72D5Zxw=
 gitlab.com/scpcorp/writeaheadlog v0.0.0-20200814111317-c404cb85e61f h1:ZFxFhrhADCgqg1hFlH67eZcADhBYvAboZcJX0pQPc70=
