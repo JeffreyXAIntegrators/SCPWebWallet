@@ -22,6 +22,7 @@ func buildHTTPRoutes() *httprouter.Router {
 	router.GET("/gui/wallet.wasm", walletWasmHandler)
 	router.GET("/gui/styles.css", styleHandler)
 	router.GET("/initializeColdWallet", coldWalletHandler)
+
 	if n == nil {
 		router.GET("/", initializingNodeHandler)
 		router.GET("/initializeBootstrapper", initializeBootstrapperHandler)
@@ -43,6 +44,8 @@ func buildHTTPRoutes() *httprouter.Router {
 		router.GET("/gui/alert/restoreFromSeed", redirect)
 		router.GET("/gui/changeLock", redirect)
 		router.GET("/gui/collapseMenu", redirect)
+		router.GET("/gui/deleteConsensus", redirect)
+		router.GET("/gui/deleteConsensusForm", redirect)
 		router.GET("/gui/expandMenu", redirect)
 		router.GET("/gui/explainWhale", redirect)
 		router.GET("/gui/importExportNotesForm", redirect)
@@ -67,6 +70,8 @@ func buildHTTPRoutes() *httprouter.Router {
 		router.POST("/gui/alert/restoreFromSeed", alertRestoreFromSeedHandler)
 		router.POST("/gui/changeLock", changeLockHandler)
 		router.POST("/gui/collapseMenu", collapseMenuHandler)
+		router.POST("/gui/deleteConsensus", deleteConsensusHandler)
+		router.POST("/gui/deleteConsensusForm", deleteConsensusFormHandler)
 		router.POST("/gui/expandMenu", expandMenuHandler)
 		router.POST("/gui/explainWhale", explainWhaleHandler)
 		router.POST("/gui/importExportNotesForm", importExportNotesFormHandler)

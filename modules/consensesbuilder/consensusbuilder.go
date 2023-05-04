@@ -10,7 +10,6 @@ import (
 
 	"gitlab.com/scpcorp/ScPrime/modules"
 	"gitlab.com/scpcorp/ScPrime/modules/consensus"
-
 	"gitlab.com/scpcorp/webwallet/build"
 )
 
@@ -72,6 +71,16 @@ func Start(dataDir string) {
 		}
 	}
 	status = `100`
+}
+
+// DeleteConsensusFile deletes consensus.db from the disk.
+func DeleteConsensusFile(dataDir string) error {
+	consensusDir := filepath.Join(dataDir, modules.ConsensusDir)
+	consensusDb := filepath.Join(consensusDir, consensus.DatabaseFilename)
+	if err := os.Remove(consensusDb); err != nil {
+		return fmt.Errorf("unable to delete consensus.db: %w", err)
+	}
+	return nil
 }
 
 // updates the status.

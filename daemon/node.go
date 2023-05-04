@@ -11,10 +11,9 @@ import (
 	"gitlab.com/scpcorp/ScPrime/modules/transactionpool"
 	"gitlab.com/scpcorp/ScPrime/modules/wallet"
 	"gitlab.com/scpcorp/ScPrime/node"
-
 	"gitlab.com/scpcorp/webwallet/modules/bootstrapper"
 	"gitlab.com/scpcorp/webwallet/modules/browserconfig"
-	"gitlab.com/scpcorp/webwallet/modules/consensesbuilder"
+	consensusbuilder "gitlab.com/scpcorp/webwallet/modules/consensesbuilder"
 	"gitlab.com/scpcorp/webwallet/server"
 	wwConfig "gitlab.com/scpcorp/webwallet/utils/config"
 )

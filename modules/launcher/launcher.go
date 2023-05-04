@@ -37,19 +37,19 @@ var height = 768
 // Launch will attempt to launch the application in the supplied browser. If that fails the
 // launcher will attempt to launch the application in a series of fallback browsers. This
 // allows the GUI head feel most like a native application.
-func Launch(browserCfg string) chan struct{} {
-	uiDone := launch(browserCfg)
+func Launch(browserCfg string) (chan struct{}, lorca.UI) {
+	uiDone, ui := launch(browserCfg)
 	if uiDone != nil {
-		return uiDone
+		return uiDone, ui
 	}
-	uiDone = fallback(browserCfg)
+	uiDone, ui = fallback(browserCfg)
 	if uiDone != nil {
-		return uiDone
+		return uiDone, ui
 	}
-	return unsupported()
+	return unsupported(), nil
 }
 
-func launch(browserCfg string) chan struct{} {
+func launch(browserCfg string) (chan struct{}, lorca.UI) {
 	switch browserCfg {
 	case "edge":
 		return edge()
@@ -58,68 +58,68 @@ func launch(browserCfg string) chan struct{} {
 	case "chromium":
 		return chromium()
 	}
-	return nil
+	return nil, nil
 }
 
-func fallback(browserCfg string) chan struct{} {
+func fallback(browserCfg string) (chan struct{}, lorca.UI) {
 	if browserCfg != "chrome" {
-		uiDone := chrome()
+		uiDone, ui := chrome()
 		if uiDone != nil {
-			return uiDone
+			return uiDone, ui
 		}
 	}
 	if browserCfg != "chromium" {
-		uiDone := chromium()
+		uiDone, ui := chromium()
 		if uiDone != nil {
-			return uiDone
+			return uiDone, ui
 		}
 	}
 	if browserCfg != "edge" {
-		uiDone := edge()
+		uiDone, ui := edge()
 		if uiDone != nil {
-			return uiDone
+			return uiDone, ui
 		}
 	}
-	return nil
+	return nil, nil
 }
 
-func edge() chan struct{} {
+func edge() (chan struct{}, lorca.UI) {
 	ui, err := lorca.NewEdge("http://localhost:4300", userProfileDir("edge"), width, height, additionalArgs...)
 	if ui == nil || err != nil {
-		return nil
+		return nil, nil
 	}
 	done := make(chan struct{})
 	go func() {
 		<-ui.Done()
 		close(done)
 	}()
-	return done
+	return done, ui
 }
 
-func chrome() chan struct{} {
+func chrome() (chan struct{}, lorca.UI) {
 	ui, err := lorca.NewGoogleChrome("http://localhost:4300", userProfileDir("chrome"), width, height, additionalArgs...)
 	if ui == nil || err != nil {
-		return nil
+		return nil, nil
 	}
 	done := make(chan struct{})
 	go func() {
 		<-ui.Done()
 		close(done)
 	}()
-	return done
+	return done, ui
 }
 
-func chromium() chan struct{} {
+func chromium() (chan struct{}, lorca.UI) {
 	ui, err := lorca.NewChromium("http://localhost:4300", userProfileDir("chromium"), width, height, additionalArgs...)
 	if ui == nil || err != nil {
-		return nil
+		return nil, nil
 	}
 	done := make(chan struct{})
 	go func() {
 		<-ui.Done()
 		close(done)
 	}()
-	return done
+	return done, ui
 }
 
 func unsupported() chan struct{} {

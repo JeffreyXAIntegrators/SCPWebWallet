@@ -11,16 +11,15 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/georgemcarlson/lorca"
 	"github.com/ncruces/zenity"
-
+	spdBuild "gitlab.com/scpcorp/ScPrime/build"
+	"gitlab.com/scpcorp/ScPrime/node"
 	"gitlab.com/scpcorp/webwallet/build"
 	"gitlab.com/scpcorp/webwallet/modules/browserconfig"
 	"gitlab.com/scpcorp/webwallet/modules/launcher"
 	"gitlab.com/scpcorp/webwallet/server"
 	wwConfig "gitlab.com/scpcorp/webwallet/utils/config"
-
-	spdBuild "gitlab.com/scpcorp/ScPrime/build"
-	"gitlab.com/scpcorp/ScPrime/node"
 )
 
 // printVersionAndRevision prints the daemon's version and revision numbers.
@@ -84,11 +83,11 @@ func startNode(node *node.Node, config *wwConfig.WebWalletConfig, loadStart time
 	return
 }
 
-func launchGui(config *wwConfig.WebWalletConfig) chan struct{} {
+func launchGui(config *wwConfig.WebWalletConfig) (chan struct{}, lorca.UI) {
 	dir, err := filepath.Abs(config.Dir)
 	if err != nil {
 		fmt.Printf("unable to launch GUI: %v\n", err)
-		return nil
+		return nil, nil
 	}
 	browser, _ := browserconfig.Browser(dir)
 	return launcher.Launch(browser)
@@ -165,7 +164,7 @@ func StartDaemon(config *wwConfig.WebWalletConfig) error {
 	// launch GUI
 	uiDone := make(chan struct{})
 	if !config.Headless {
-		uiDone = launchGui(config)
+		uiDone, server.UI = launchGui(config)
 	}
 
 	if !server.IsRunning() {
