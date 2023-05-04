@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/georgemcarlson/lorca"
 	"gitlab.com/NebulousLabs/errors"
 
 	"gitlab.com/scpcorp/ScPrime/modules"
@@ -21,6 +22,7 @@ import (
 )
 
 var (
+	UI       lorca.UI
 	n        *node.Node
 	config   *wwConfig.WebWalletConfig
 	srv      *http.Server

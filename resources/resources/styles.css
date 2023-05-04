@@ -158,4 +158,7 @@ a.nolines{
   z-index: 1002;
   overflow: auto;
 }
-
+button[type="submit"]:disabled {
+  color: #dddddd;
+  background-color: #6799e6;
+}

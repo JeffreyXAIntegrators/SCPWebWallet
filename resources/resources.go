@@ -36,6 +36,9 @@ var consensusSetUploadingHTML string
 //go:embed resources/cold_wallet.html
 var coldWalletHTML string
 
+//go:embed resources/forms/delete_consensus.html
+var deleteConsensusForm string
+
 //go:embed resources/wallet_template.html
 var walletHTMLTemplate string
 
@@ -162,6 +165,11 @@ func ConsensusSetUploadingHTML() string {
 // ColdWalletHTML returns an html page
 func ColdWalletHTML() string {
 	return coldWalletHTML
+}
+
+// DeleteConsensusForm returns an html page
+func DeleteConsensusForm() string {
+	return deleteConsensusForm
 }
 
 // WalletHTMLTemplate returns the wallet html template

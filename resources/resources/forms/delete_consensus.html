@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>ScPrime Web Wallet</title>
+    <link rel="stylesheet" href="/gui/styles.css">
+    <script type="text/javascript" src="/gui/scripts.js"></script>
+    <meta http-equiv="PRAGMA" content="NO-CACHE">
+    <meta http-equiv="CACHE-CONTROL" content="NO-CACHE">
+  </head>
+  <body>
+    <div class="col-5 left top no-wrap">
+      <div>
+        <img class="scprime-logo" alt="ScPrime Web Wallet" src="/gui/logo.png"/>
+      </div>
+    </div>
+    <div id="popup" class="popup center">
+      <h2 class="uppercase">Rebuild Consensus</h2>
+      <form action="/gui/deleteConsensus?&CACHE_BUSTER;" method="post">
+        <div class="pad blue-dashed">
+          <p>Click below to rebuild the blockchain and download a new consensus.db. </p>
+          <p>The wallet will shut down and on restart you will be prompted with options for rebuild.</p>
+        </div>
+        <input type="hidden" name="delete_consensus" value="yes">
+        <div class="pad blue-dashed">
+          <div class="inline-block">
+            <button type="submit" name="submitButton" onclick="disableButtons()">Rebuild Consensus</button>
+          </div>
+          <div class="inline-block">
+            <button name="cancel" value="true" type="submit">Cancel</button>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div id="fade" class="fade"></div>
+  </body>
+  <script>
+    function disableButtons() {
+      setTimeout(function() {
+        document.getElementsByName("submitButton")[0].disabled = true;
+        document.getElementsByName("cancel")[0].disabled = true;
+      }, 100);
+}
+  </script>
+</html>

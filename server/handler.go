@@ -130,6 +130,31 @@ func coldWalletHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Pa
 	w.Write(htmlBytes)
 }
 
+func deleteConsensusHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
+	cancel := req.FormValue("cancel")
+	deleteConsensus := req.FormValue("delete_consensus")
+	if cancel == "true" || deleteConsensus != "yes" {
+		guiHandler(w, req, nil)
+		return
+	}
+	consensusbuilder.Close()
+	n.Close()
+	bootstrapper.Close()
+	browserconfig.Close()
+
+	if err := consensusbuilder.DeleteConsensusFile(config.Dir); err != nil {
+		writeError(w, fmt.Sprintf("unable to delete consensus: %s", err.Error()), "")
+	}
+	if UI != nil {
+		UI.Close()
+	}
+	os.Exit(0)
+}
+
+func deleteConsensusFormHandler(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
+	writeStaticHTML(w, resources.DeleteConsensusForm(), "")
+}
+
 func transactionHistoryCsvExport(w http.ResponseWriter, req *http.Request, _ httprouter.Params) {
 	msgPrefix := "Unable to export transaction history: "
 	sessionID := req.FormValue("session_id")
