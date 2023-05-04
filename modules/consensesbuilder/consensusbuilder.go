@@ -75,13 +75,11 @@ func Start(dataDir string) {
 
 // DeleteConsensusFile deletes consensus.db from the disk.
 func DeleteConsensusFile(dataDir string) error {
-
 	consensusDir := filepath.Join(dataDir, modules.ConsensusDir)
 	consensusDb := filepath.Join(consensusDir, consensus.DatabaseFilename)
 	if err := os.Remove(consensusDb); err != nil {
 		return fmt.Errorf("unable to delete consensus.db: %w", err)
 	}
-
 	return nil
 }
 
