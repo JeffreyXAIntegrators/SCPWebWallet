@@ -1,55 +1,55 @@
 <div class='middle pad'>
   <div id="displayAddress" class='inline-block'>
-    &ADDRESS;
+    <table class="left addresses">
+    <tr>
+      <th colspan="2" style="font-size:150%">Last 10 Addresses</th>
+    </tr>
+    &ADDRESSES;
+  </table>
   </div>
-  <div id="copiedIcon" class='inline-block cursor-help' title='address copied to clipboard'></div>
 </div>
 <div class="middle pad blue-dashed">
-  <div id="copyAddressToClipboard" class="inline-block"></div>
-  <div id="expandAddress" class="inline-block"></div>
-  <div id="collapseAddress" class="inline-block"></div>
+  <div class="inline-block">
+    <form action="/gui/alert/receiveCoins?&CACHE_BUSTER;" method="post">
+      <input type="hidden" name="session_id" value="&SESSION_ID;">
+      <input type="hidden" name="new_address" value="1">
+      <button type="submit">New Address</button>
+    </form>
+  </div>
   <div class="inline-block">
     <form action="/gui?&CACHE_BUSTER;" method="post">
       <input type="hidden" name="session_id" value="&SESSION_ID;">
       <button type="submit">Close</button>
     </form>
   </div>
-  <script>
-    function addCopiedIcon() {
-      document.getElementById('copiedIcon').innerHTML = '🖨️'
-    }
-    function removeCopiedIcon() {
-      document.getElementById('copiedIcon').innerHTML = ''
-    }
-    function displayAddress() {
-      if (isAddressCollapsed) {
-        var collapsedAddress = address.substring(0, 10) + '...' + address.substring(address.length - 10);
-        document.getElementById('displayAddress').innerHTML = collapsedAddress
-      } else {
-        document.getElementById('displayAddress').innerHTML = address
-      }
-      removeCopiedIcon()
-    }
-    function expandAddress() {
-      isAddressCollapsed = false
-      document.getElementById("collapseAddress").innerHTML = '<button onclick="collapseAddress()">Collapse</button>'
-      document.getElementById("expandAddress").innerHTML = ''
-      displayAddress()
-    }
-    function collapseAddress() {
-      isAddressCollapsed = true
-      document.getElementById("expandAddress").innerHTML = '<button onclick="expandAddress()">Expand</button>'
-      document.getElementById("collapseAddress").innerHTML = ''
-      displayAddress()
-    }
-    function copyAddressToClipboard() {
-      copyToClipboard(address)
-      addCopiedIcon()
-    }
-    var address = '&ADDRESS;'.toLowerCase()
-    var isAddressCollapsed = true
-    collapseAddress()
-    document.getElementById("copyAddressToClipboard").innerHTML = `<button onclick="copyAddressToClipboard()">Copy</button>`
-  </script>
 </div>
 
+<script>
+window.onload = function() {
+  // Get all buttons
+  var copyButtons = document.getElementsByClassName("copyButton");
+
+  // Add event listener for each button
+  for (var i = 0; i < copyButtons.length; i++) {
+    copyButtons[i].addEventListener('click', function(event) {
+      textToCopy = event.target.parentElement.parentElement.children[0].innerText;
+      // Copy text to clipboard
+      navigator.clipboard.writeText(textToCopy)
+        .then(() => {
+          console.log('Text copied to clipboard');
+          // Show feedback to user
+          var originalText = event.target.innerText;
+          event.target.innerText = "Copied!";
+          // Change the text back after 2 seconds
+          setTimeout(function() {
+            event.target.innerText = originalText;
+          }, 2000);
+        })
+        .catch(err => {
+          // This can happen if the user denies clipboard permissions:
+          console.error('Could not copy text: ', err);
+        });
+    });
+  }
+}
+</script>

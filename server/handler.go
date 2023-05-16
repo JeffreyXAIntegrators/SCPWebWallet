@@ -246,6 +246,13 @@ func alertReceiveCoinsHandler(w http.ResponseWriter, req *http.Request, _ httpro
 		msg := "Session ID does not exist."
 		writeError(w, msg, "")
 	}
+
+	var getNewAddress bool
+	sNewAddress := req.FormValue("new_address")
+	if sNewAddress == "1" {
+		getNewAddress = true
+	}
+
 	var msgPrefix = "Unable to retrieve address: "
 	wallet, err := getWallet(sessionID)
 	if err != nil {
@@ -253,7 +260,7 @@ func alertReceiveCoinsHandler(w http.ResponseWriter, req *http.Request, _ httpro
 		writeError(w, msg, sessionID)
 		return
 	}
-	addresses, err := wallet.LastAddresses(1)
+	addresses, err := wallet.LastAddresses(10)
 	if err != nil {
 		msg := fmt.Sprintf("%s%v", msgPrefix, err)
 		writeError(w, msg, sessionID)
@@ -267,16 +274,32 @@ func alertReceiveCoinsHandler(w http.ResponseWriter, req *http.Request, _ httpro
 			return
 		}
 	}
-	addresses, err = wallet.LastAddresses(1)
+	var newAddr types.UnlockConditions
+	if getNewAddress {
+		newAddr, err = wallet.NextAddress()
+		if err != nil {
+			msg := fmt.Sprintf("%s%v", msgPrefix, err)
+			writeError(w, msg, sessionID)
+			return
+		}
+	}
+	addresses, err = wallet.LastAddresses(10)
 	if err != nil {
 		msg := fmt.Sprintf("%s%v", msgPrefix, err)
 		writeError(w, msg, sessionID)
 		return
 	}
-	address := strings.ToUpper(fmt.Sprintf("%s", addresses[0]))
+	var sAddresses string
+	for _, v := range addresses {
+		tdClass := ""
+		if v.String() == newAddr.UnlockHash().String() {
+			tdClass = " class=\"bold\""
+		}
+		sAddresses += fmt.Sprintf("<tr><td%s>%s</td><td class=\"center\"><button class=\"small-button copyButton\">Copy</button></td></tr>\n", tdClass, strings.ToUpper(v.String()))
+	}
 	title := "RECEIVE"
 	formHTML := resources.ReceiveCoinsForm()
-	formHTML = strings.Replace(formHTML, "&ADDRESS;", address, -1)
+	formHTML = strings.Replace(formHTML, "&ADDRESSES;", sAddresses, -1)
 	writeForm(w, title, formHTML, sessionID)
 }
 
