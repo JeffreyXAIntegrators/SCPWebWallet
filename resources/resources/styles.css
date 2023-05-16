@@ -130,11 +130,25 @@ a.nolines{
   background: linear-gradient(transparent, black 200px);
   z-index: 1001;
 }
+.popup-narrow {
+  position: absolute;
+  top: 15%;
+  left: 25%;
+  right: 25%;
+  width: 50%;
+  padding: 20px;
+  border-radius: 25px;
+  border: 2px solid #2074EE;
+  background-color: #15202B;
+  z-index: 1002;
+  overflow: auto;
+}
 .popup {
   position: absolute;
-  top: 25%;
-  left: 25%;
-  width: 50%;
+  top: 15%;
+  left: 5%;
+  right: 5%;
+  /* width: 85%; */
   padding: 20px;
   border-radius: 25px;
   border: 2px solid #2074EE;
@@ -161,4 +175,13 @@ a.nolines{
 button[type="submit"]:disabled {
   color: #dddddd;
   background-color: #6799e6;
+}
+.addresses {
+  font-family: monospace;
+}
+.copyButton {
+  width: 90px;
+}
+.bold {
+  font-weight: bold;
 }
