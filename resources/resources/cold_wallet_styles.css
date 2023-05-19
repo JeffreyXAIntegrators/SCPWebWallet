@@ -1,0 +1,62 @@
+body {
+  background-color: #15202B;
+  color: #FFFFFF;
+  font-family: "Arial", "Helvetica", sans-serif;
+}
+button {
+  color: #FFFFFF;
+  background-color: #2074EE;
+  font-size: 16px;
+  padding: 14px 40px;
+}
+hr {
+  border:none; /* Adds line dividers to terminak browsers */
+}
+a:link {
+  color: #2074EE;
+}
+a:visited {
+  color: #2074EE;
+}
+a:hover {
+  color: #2074EE;
+}
+a:active {
+  color: #2074EE;
+}
+a.nolines{
+  text-decoration:none;
+}
+.scprime-logo {
+  height: 40px;
+  width: 191px;
+}
+.uppercase {
+  text-transform: uppercase;
+}
+.inline-block {
+  display: inline-block;
+}
+.display-none {
+  display: none;
+}
+.cursor-help {
+  cursor: help;
+}
+.pad {padding: 20px;}
+.pad-col {padding: .5rem;}
+.left {text-align: left;}
+.center {text-align: center;}
+.top {vertical-align: top;}
+.middle {vertical-align: middle;}
+.right {text-align: right;}
+.dashed {border-top:2px dashed #2074EE;}
+.popup {
+  position: absolute;
+  top: 5%;
+  left: 5%;
+  width: 90%;
+  z-index: 1002;
+  overflow: auto;
+}
+
