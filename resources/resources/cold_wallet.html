@@ -7,14 +7,20 @@
   </head>
   <body id="coldWallet">
     <div id="content">
-    <div class="col-5 left top no-wrap">
+    <div id="popup" class="popup center">
       <div>
         <img class="scprime-logo" alt="ScPrime Web Wallet" src="data:image/png;base64,&LOGO;"/>
       </div>
-    </div>
-    <div id="popup" class="popup center">
       <h2 class="uppercase">Cold Wallet</h2>
-      <div class="middle pad blue-dashed" id="popup_content">
+      <div class="middle pad">
+        <div class="inline-block">
+          &REGENERATE;
+        </div>
+        <div class="inline-block">
+          &CLOSE;
+        </div>
+      </div>
+      <div class="middle pad dashed" id="popup_content">
         Seed:
       </div>
       <div>
@@ -24,17 +30,15 @@
       <div class='pad'>
         <div id="copySeedToClipboard" class="inline-block"></div>
       </div>
-      <div class="middle pad blue-dashed" id="popup_content">
+      <div class="middle pad dashed" id="popup_content">
         Receive Coins At:
       </div>
       <div>
-        <div id="displayAddress" class="inline-block middle pad" id="popup_content"></div>
+        <div id="address" class="inline-block middle pad" id="popup_content"></div>
         <div id="copiedAddressIcon" class='inline-block cursor-help' title='address copied to clipboard'></div>
       </div>
       <div class='pad'>
         <div id="copyAddressToClipboard" class="inline-block"></div>
-        <div id="expandAddress" class="inline-block"></div>
-        <div id="collapseAddress" class="inline-block"></div>
       </div>
     </div>
     <div id="fade" class="fade"></div>
@@ -54,27 +58,6 @@
       }
       function removeCopiedSeedIcon() {
         document.getElementById('copiedSeedIcon').innerHTML = ''
-      }
-      function displayAddress() {
-        if (isAddressCollapsed) {
-          var collapsedAddress = address.substring(0, 10) + '...' + address.substring(address.length - 10);
-          document.getElementById('displayAddress').innerHTML = collapsedAddress
-        } else {
-          document.getElementById('displayAddress').innerHTML = address
-        }
-        removeCopiedAddressIcon()
-      }
-      function expandAddress() {
-        isAddressCollapsed = false
-        document.getElementById("collapseAddress").innerHTML = '<button onclick="collapseAddress()">Collapse</button>'
-        document.getElementById("expandAddress").innerHTML = ''
-        displayAddress()
-      }
-      function collapseAddress() {
-        isAddressCollapsed = true
-        document.getElementById("expandAddress").innerHTML = '<button onclick="expandAddress()">Expand</button>'
-        document.getElementById("collapseAddress").innerHTML = ''
-        displayAddress()
       }
       function copyAddressToClipboard() {
         copyToClipboard(address)
@@ -102,8 +85,8 @@
         go.run(result.instance);
         seed = newWalletSeed()
         address = addressFromSeed(seed).toLowerCase()
+        document.getElementById('address').innerHTML = address	
         document.getElementById("seed").innerHTML = seed
-        collapseAddress()
         document.getElementById("copySeedToClipboard").innerHTML = `<button onclick="copySeedToClipboard()">Copy</button>`
         document.getElementById("copyAddressToClipboard").innerHTML = `<button onclick="copyAddressToClipboard()">Copy</button>`
       })

@@ -13,6 +13,9 @@ var favicon []byte
 //go:embed resources/styles.css
 var cssStyleSheet []byte
 
+//go:embed resources/cold_wallet_styles.css
+var coldWalletCssStyleSheet []byte
+
 //go:embed resources/scripts.js
 var javascript []byte
 
@@ -130,6 +133,11 @@ func Favicon() []byte {
 // CSSStyleSheet returns the css style sheet.
 func CSSStyleSheet() []byte {
 	return cssStyleSheet
+}
+
+// ColdWalletCSSStyleSheet returns the cold wallet css style sheet.
+func ColdWalletCSSStyleSheet() []byte {
+	return coldWalletCssStyleSheet
 }
 
 // WasmExec returns the wasm_exec.js binding library.
