@@ -6,47 +6,70 @@
     <meta http-equiv="CACHE-CONTROL" content="NO-CACHE">
   </head>
   <body id="coldWallet">
-    <div id="content">
-    <div id="popup" class="popup center">
-      <div>
-        <img class="scprime-logo" alt="ScPrime Web Wallet" src="data:image/png;base64,&LOGO;"/>
-      </div>
-      <h2 class="uppercase">Cold Wallet</h2>
-      <div class="middle pad">
-        <div class="inline-block">
-          &REGENERATE;
-        </div>
-        <div class="inline-block">
-          &CLOSE;
-        </div>
-      </div>
-      <div class="middle pad dashed" id="popup_content">
-        Seed:
-      </div>
-      <div>
-        <div id="seed" class="inline-block middle pad" id="popup_content"></div>
-        <div id="copiedSeedIcon" class='inline-block cursor-help' title='seed copied to clipboard'></div>
-      </div>
-      <div class='pad'>
-        <div id="copySeedToClipboard" class="inline-block"></div>
-      </div>
-      <div class="middle pad dashed" id="popup_content">
-        Receive Coins At:
-      </div>
-      <div>
-        <div id="address" class="inline-block middle pad" id="popup_content"></div>
-        <div id="copiedAddressIcon" class='inline-block cursor-help' title='address copied to clipboard'></div>
-      </div>
-      <div class='pad'>
-        <div id="copyAddressToClipboard" class="inline-block"></div>
-      </div>
-    </div>
-    <div id="fade" class="fade"></div>
+    <h1 class="center">ScPrime</h1>
+    <h2 class="center">Cold Wallet</h2>
+    <div id="content" class="pad center">
+        Loading...
     </div>
     <style>
 &STYLE;
     </style>
     <script>
+      function displayStartupMenu() {
+        document.getElementById('content').innerHTML = `<div class='pad dashed'></div>`
+        document.getElementById('content').innerHTML += `<div class='pad'><button onclick='displayUnlockWallet()'>Unlock Existing</button></div>`
+        document.getElementById('content').innerHTML += `<div class='pad'><button onclick='displayRestoreFromSeed()'>Restore From Seed</button></div>`
+        document.getElementById('content').innerHTML += `<div class='pad'><button onclick='displayNewWallet()'>Create New Wallet</button></div>`
+      }
+      function displayNewWallet() {
+	displayWallet(newWalletSeed())
+      }
+      function displayRestoreFromSeed() {
+        document.getElementById('content').innerHTML = `<div class='pad'><button onclick='displayStartupMenu()'>Close</button></div>`
+        document.getElementById('content').innerHTML += `<div class='pad dashed'></div>`
+        document.getElementById('content').innerHTML += `<div class='pad'>Seed:</div>`
+        document.getElementById('content').innerHTML += `<div class='pad'><input type="password" id="restoreThisSeed"></div>`
+        document.getElementById('content').innerHTML += `<div class='pad'><button onclick='displayWallet(document.getElementById("restoreThisSeed").value)'>Restore</button></div>`
+      }
+      function displayWallet(aSeed) {
+        seed = aSeed
+        address = addressFromSeed(seed).toLowerCase()
+        document.getElementById('content').innerHTML = `<div class='pad'><button onclick='displaySaveThisWallet()'>Save</button> <button onclick='displayStartupMenu()'>Close</button></div>`
+        document.getElementById('content').innerHTML += `<div class='pad dashed'></div>`
+        document.getElementById('content').innerHTML += `<div class='pad'>Seed:</div>`
+        document.getElementById('content').innerHTML += `<div class='pad'>${seed} <font id='copiedSeedIcon'></font></div>`
+        document.getElementById('content').innerHTML += `<div class='pad'><button onclick='copySeedToClipboard()'>Copy</button></div>`
+        document.getElementById('content').innerHTML += `<div class='pad dashed'></div>`
+        document.getElementById('content').innerHTML += `<div class='pad'>Receive Coins At:</div>`
+        document.getElementById('content').innerHTML += `<div class='pad'>${address} <font id='copiedAddressIcon'></font></div>`
+        document.getElementById('content').innerHTML += `<div class='pad'><button onclick="copyAddressToClipboard()">Copy</button></div>`  
+      }
+      function displaySaveThisWallet() {
+        document.getElementById('content').innerHTML = `<div class='pad'><button onclick='displayStartupMenu()'>Close</button></div>`
+        document.getElementById('content').innerHTML += `<div class='pad dashed'></div>`
+        document.getElementById('content').innerHTML += `<div class='pad'>Wallet Name:</div>`
+        document.getElementById('content').innerHTML += `<div class='pad'><input type="text" id="saveThisWalletName"></div>`
+        document.getElementById('content').innerHTML += `<div class='pad'>Wallet Password:</div>`
+        document.getElementById('content').innerHTML += `<div class='pad'><input type="password" id="saveThisWalletPass"></div>`
+	      document.getElementById('content').innerHTML += `<div class='pad'><button onclick='saveThisWallet(document.getElementById("saveThisWalletName").value, document.getElementById("saveThisWalletPass").value, "${seed}")'>Save</button></div>`
+      }
+      function saveThisWallet(aName, aPass, aSeed) {
+        localStorage.setItem(aName + '~~~~' + aPass, aSeed)
+	displayWallet(seed)
+      }
+      function displayUnlockWallet() {
+        document.getElementById('content').innerHTML = `<div class='pad'><button onclick='displayStartupMenu()'>Close</button></div>`
+        document.getElementById('content').innerHTML += `<div class='pad dashed'></div>`
+        document.getElementById('content').innerHTML += `<div class='pad'>Wallet Name:</div>`
+        document.getElementById('content').innerHTML += `<div class='pad'><input type="text" id="unlockThisWalletName"></div>`
+        document.getElementById('content').innerHTML += `<div class='pad'>Wallet Password:</div>`
+        document.getElementById('content').innerHTML += `<div class='pad'><input type="password" id="unlockThisWalletPass"></div>`
+        document.getElementById('content').innerHTML += `<div class='pad'><button onclick='unlockThisWallet(document.getElementById("unlockThisWalletName").value, document.getElementById("unlockThisWalletPass").value)'>Unlock</button></div>`
+      }
+      function unlockThisWallet(aName, aPass) {
+        seed = localStorage.getItem(aName + '~~~~' + aPass)
+        displayWallet(seed)
+      }
       function addCopiedAddressIcon() {
         document.getElementById('copiedAddressIcon').innerHTML = '🖨️'
       }
@@ -71,7 +94,6 @@
       }
       var address
       var seed
-      var isAddressCollapsed = true
     </script>
     <script>
 &SCRIPT;
@@ -83,12 +105,7 @@
       const go = new Go();
       WebAssembly.instantiateStreaming(fetch("data:application/wasm;base64,&WALLET_WASM;"), go.importObject).then((result) => {
         go.run(result.instance);
-        seed = newWalletSeed()
-        address = addressFromSeed(seed).toLowerCase()
-        document.getElementById('address').innerHTML = address	
-        document.getElementById("seed").innerHTML = seed
-        document.getElementById("copySeedToClipboard").innerHTML = `<button onclick="copySeedToClipboard()">Copy</button>`
-        document.getElementById("copyAddressToClipboard").innerHTML = `<button onclick="copyAddressToClipboard()">Copy</button>`
+	displayStartupMenu()
       })
     </script>
   </body>
