@@ -33,7 +33,7 @@
       }
       function displayWallet(aSeed) {
         seed = aSeed
-        address = zeroAddressFromSeed(seed, 0).toLowerCase()
+        address = zeroAddressFromSeed(seed).toLowerCase()
         document.getElementById('content').innerHTML = `<div class='pad'><button onclick='displaySaveThisWallet()'>Save</button> <button onclick='displayStartupMenu()'>Close</button></div>`
         document.getElementById('content').innerHTML += `<div class='pad dashed'></div>`
         document.getElementById('content').innerHTML += `<div class='pad'>Wallet Summary:</div>`
@@ -49,7 +49,7 @@
         document.getElementById('content').innerHTML += `<div class='pad'>${seed} <font id='copiedSeedIcon'></font></div>`
         document.getElementById('content').innerHTML += `<div class='pad'><button onclick='copySeedToClipboard()'>Copy</button></div>`
  var addresses = [address]
-	for (var i = 0; i < 10000; i++) {
+	for (var i = 0; i < 1000; i++) {
           addresses.push(addressFromSeed(seed, i).toLowerCase())
 	}
 	var query = {query: addresses.join("\n")}
