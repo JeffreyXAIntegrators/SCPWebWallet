@@ -33,16 +33,47 @@
       }
       function displayWallet(aSeed) {
         seed = aSeed
-        address = addressFromSeed(seed).toLowerCase()
+        address = zeroAddressFromSeed(seed, 0).toLowerCase()
         document.getElementById('content').innerHTML = `<div class='pad'><button onclick='displaySaveThisWallet()'>Save</button> <button onclick='displayStartupMenu()'>Close</button></div>`
+        document.getElementById('content').innerHTML += `<div class='pad dashed'></div>`
+        document.getElementById('content').innerHTML += `<div class='pad'>Wallet Summary:</div>`
+        document.getElementById('content').innerHTML += `<div id='confirmedScpBalance' class='pad'>Loading...</div>`
+        document.getElementById('content').innerHTML += `<div id='confirmedSpfBalance' class='pad'>Loading...</div>`
+        document.getElementById('content').innerHTML += `<div id='numberOfTransactions' class='pad'>Loading...</div>`
+        document.getElementById('content').innerHTML += `<div class='pad dashed'></div>`
+        document.getElementById('content').innerHTML += `<div class='pad'>Receive Coins At:</div>`
+        document.getElementById('content').innerHTML += `<div class='pad'>${address} <font id='copiedAddressIcon'></font></div>`
+        document.getElementById('content').innerHTML += `<div class='pad'><button onclick="copyAddressToClipboard()">Copy</button></div>`
         document.getElementById('content').innerHTML += `<div class='pad dashed'></div>`
         document.getElementById('content').innerHTML += `<div class='pad'>Seed:</div>`
         document.getElementById('content').innerHTML += `<div class='pad'>${seed} <font id='copiedSeedIcon'></font></div>`
         document.getElementById('content').innerHTML += `<div class='pad'><button onclick='copySeedToClipboard()'>Copy</button></div>`
-        document.getElementById('content').innerHTML += `<div class='pad dashed'></div>`
-        document.getElementById('content').innerHTML += `<div class='pad'>Receive Coins At:</div>`
-        document.getElementById('content').innerHTML += `<div class='pad'>${address} <font id='copiedAddressIcon'></font></div>`
-        document.getElementById('content').innerHTML += `<div class='pad'><button onclick="copyAddressToClipboard()">Copy</button></div>`  
+ var addresses = [address]
+	for (var i = 0; i < 10000; i++) {
+          addresses.push(addressFromSeed(seed, i).toLowerCase())
+	}
+	var query = {query: addresses.join("\n")}
+	fetch("https://explorer.scpri.me/navigator-api/addresses", {
+          "headers": {
+            "Accept": "application/json, text/plain, */*",
+            "Accept-Language": "en-US,en;q=0.5",
+            "Content-Type": "application/json",
+            "Sec-Fetch-Dest": "empty",
+            "Sec-Fetch-Mode": "cors",
+            "Sec-Fetch-Site": "same-origin"
+          },
+          "body": JSON.stringify({query: addresses.join("\n")}),
+          "method": "POST",
+          "mode": "cors"
+        }).then(response => response.json())
+          .then(result => {
+	    document.getElementById('confirmedScpBalance').innerHTML = `Confirmed SCP Balance: ${result[0].balanceSc} SCP`
+ 	    document.getElementById('confirmedSpfBalance').innerHTML = `Confirmed SPF Balance: ${result[0].balanceSf} SPF`
+  	    document.getElementById('numberOfTransactions').innerHTML = `Number of Transactions: ${result[0].TotalTxCount}`
+          })
+          .catch(error => {
+            console.error("Error:", error);
+          })
       }
       function displaySaveThisWallet() {
         document.getElementById('content').innerHTML = `<div class='pad'><button onclick='displayStartupMenu()'>Close</button></div>`
@@ -91,6 +122,18 @@
         copyToClipboard(seed)
         removeCopiedAddressIcon()
         addCopiedSeedIcon()
+      }
+      // returns a new random wallet seed
+      function newWalletSeed() {
+        return wasmNewWalletSeed()
+      }
+      // returns the zero address from the seed
+      function zeroAddressFromSeed(seed) {
+        return wasmAddressFromSeed(seed, 0)
+      }
+      // returns the address from the seed
+      function addressFromSeed(seed, offset) {
+        return wasmAddressFromSeed(seed, offset)
       }
       var address
       var seed

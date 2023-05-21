@@ -309,14 +309,6 @@ function copyToClipboard(textToCopy) {
   document.execCommand("Copy");
   document.body.removeChild(temp);
 }
-// returns a new random wallet seed
-function newWalletSeed() {
-  return wasmNewWalletSeed()
-}
-// returns the zero address from the seed
-function addressFromSeed(seed) {
-  return wasmAddressFromSeed(seed)
-}
 refreshBootstrapperProgress()
 refreshConsensusBuilderProgress()
 

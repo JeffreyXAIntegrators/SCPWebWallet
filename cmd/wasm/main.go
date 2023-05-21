@@ -32,17 +32,19 @@ func WasmNewWalletSeed() js.Func {
 	return jsonFunc
 }
 
-// WasmAddressFromSeed returns the zero address from the seed.
-// requires exactly one parameter.
+// WasmAddressFromSeed returns an address from the seed.
+// requires exactly two parameters.
 // first parameter must be the wallet seed supplied as a string
+// second parameter must be the offset
 func WasmAddressFromSeed() js.Func {
 	jsonFunc := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		if len(args) != 1 {
+		if len(args) != 2 {
 			fmt.Println("invalid number of arguments passed")
 			return nil
 		}
 		seed, _ := wallet.StringToSeed(args[0].String(), mnemonics.DictionaryID("english"))
-		key := wallet.GetAddress(seed, 0)
+                offset := uint64(args[1].Int())
+		key := wallet.GetAddress(seed, offset)
 		return key.UnlockConditions.UnlockHash().String()
 	})
 	return jsonFunc
