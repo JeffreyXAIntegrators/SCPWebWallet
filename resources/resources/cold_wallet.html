@@ -15,14 +15,20 @@
 &STYLE;
     </style>
     <script>
+      var addresses = []
+      var address
+      var seed
       function displayStartupMenu() {
+        addresses = []
+        address = ""
+        seed = ""
         document.getElementById('content').innerHTML = `<div class='pad dashed'></div>`
         document.getElementById('content').innerHTML += `<div class='pad'><button onclick='displayUnlockWallet()'>Unlock Existing</button></div>`
         document.getElementById('content').innerHTML += `<div class='pad'><button onclick='displayRestoreFromSeed()'>Restore From Seed</button></div>`
         document.getElementById('content').innerHTML += `<div class='pad'><button onclick='displayNewWallet()'>Create New Wallet</button></div>`
       }
       function displayNewWallet() {
-	displayWallet(newWalletSeed())
+        displayWallet(newWalletSeed())
       }
       function displayRestoreFromSeed() {
         document.getElementById('content').innerHTML = `<div class='pad'><button onclick='displayStartupMenu()'>Close</button></div>`
@@ -33,7 +39,12 @@
       }
       function displayWallet(aSeed) {
         seed = aSeed
-        address = zeroAddressFromSeed(seed).toLowerCase()
+        if (addresses.length == 0) {
+          for (var i = 0; i < 1000; i++) {
+            addresses.push(addressFromSeed(seed, i).toLowerCase())
+          }
+        }
+        address = addresses[0]
         document.getElementById('content').innerHTML = `<div class='pad'><button onclick='displaySaveThisWallet()'>Save</button> <button onclick='displayStartupMenu()'>Close</button></div>`
         document.getElementById('content').innerHTML += `<div class='pad dashed'></div>`
         document.getElementById('content').innerHTML += `<div class='pad'>Wallet Summary:</div>`
@@ -48,12 +59,7 @@
         document.getElementById('content').innerHTML += `<div class='pad'>Seed:</div>`
         document.getElementById('content').innerHTML += `<div class='pad'>${seed} <font id='copiedSeedIcon'></font></div>`
         document.getElementById('content').innerHTML += `<div class='pad'><button onclick='copySeedToClipboard()'>Copy</button></div>`
- var addresses = [address]
-	for (var i = 0; i < 1000; i++) {
-          addresses.push(addressFromSeed(seed, i).toLowerCase())
-	}
-	var query = {query: addresses.join("\n")}
-	fetch("https://explorer.scpri.me/navigator-api/addresses", {
+        fetch("https://explorer.scpri.me/navigator-api/addresses", {
           "headers": {
             "Accept": "application/json, text/plain, */*",
             "Accept-Language": "en-US,en;q=0.5",
@@ -67,9 +73,9 @@
           "mode": "cors"
         }).then(response => response.json())
           .then(result => {
-	    document.getElementById('confirmedScpBalance').innerHTML = `Confirmed SCP Balance: ${result[0].balanceSc} SCP`
- 	    document.getElementById('confirmedSpfBalance').innerHTML = `Confirmed SPF Balance: ${result[0].balanceSf} SPF`
-  	    document.getElementById('numberOfTransactions').innerHTML = `Number of Transactions: ${result[0].TotalTxCount}`
+            document.getElementById('confirmedScpBalance').innerHTML = `Confirmed SCP Balance: ${result[0].balanceSc/1000000000000000000000000000} SCP`
+            document.getElementById('confirmedSpfBalance').innerHTML = `Confirmed SPF Balance: ${result[0].balanceSf} SPF`
+            document.getElementById('numberOfTransactions').innerHTML = `Number of Transactions: ${result[0].TotalTxCount}`
           })
           .catch(error => {
             console.error("Error:", error);
@@ -86,7 +92,7 @@
       }
       function saveThisWallet(aName, aPass, aSeed) {
         localStorage.setItem(aName + '~~~~' + aPass, aSeed)
-	displayWallet(seed)
+        displayWallet(seed)
       }
       function displayUnlockWallet() {
         document.getElementById('content').innerHTML = `<div class='pad'><button onclick='displayStartupMenu()'>Close</button></div>`
@@ -127,16 +133,85 @@
       function newWalletSeed() {
         return wasmNewWalletSeed()
       }
-      // returns the zero address from the seed
-      function zeroAddressFromSeed(seed) {
-        return wasmAddressFromSeed(seed, 0)
-      }
       // returns the address from the seed
       function addressFromSeed(seed, offset) {
         return wasmAddressFromSeed(seed, offset)
       }
-      var address
-      var seed
+      // return the utxo pool for the last 100 transactions
+      // this is sort of hacked together because there is not 
+      // a perfect way to determine if a transaction is already 
+      // spent by just looking at the API response from scprime.info,
+      // though perhaps in the future scprime.info can add an IsSpent 
+      // boolean to every transaction?
+      function constructUtxoPoolFromLast100Transactions(last100Transactions) {
+        var utxoPool = []
+        for (var i = 0; i < last100Transactions.length; i++) {
+          transaction = last100Transactions[i]
+          // do not spend transactions that contain SPF
+          if (transaction.SfChange == 0 && transaction.ScChange > 0) {
+            var isSpent = false;
+            for (var j = 0; j < last100Transactions.length; j++) {
+              if (transaction.ScChange == (last100Transactions[j].ScChange * -1)) {
+                isSpent = true
+                break;
+              }
+            }
+            if (!isSpent) {
+              utxoPool.push(transaction)
+            }
+          }
+        }
+        return utxoPool
+      }
+      // constructs an SCP spend
+      function fundSiacoins(targetAddress, amount) {
+        fetch("https://explorer.scpri.me/navigator-api/addresses", {
+          "headers": {
+            "Accept": "application/json, text/plain, */*",
+            "Accept-Language": "en-US,en;q=0.5",
+            "Content-Type": "application/json",
+            "Sec-Fetch-Dest": "empty",
+            "Sec-Fetch-Mode": "cors",
+            "Sec-Fetch-Site": "same-origin"
+          },
+          "body": JSON.stringify({query: addresses.join("\n")}),
+          "method": "POST",
+          "mode": "cors"
+        }).then(response => response.json())
+          .then(result => {
+            var utxoPool = constructUtxoPoolFromLast100Transactions(result[2].last100Transactions)
+            var spendTransaction = {}
+            spendTransaction.transaction = {}
+            spendTransaction.transaction.siacoininputs = []
+            spendTransaction.transaction.siacoinoutputs = []
+            var totalAmount = 0
+            for (var i = 0; i < utxoPool.length; i++) {
+              var utxo = utxoPool[i]
+              var siacoinInput = {}
+              siacoinInput.parentid = utxo.MasterHash
+              siacoinInput.unlockconditions = {}
+              siacoinInput.unlockconditions.timelock = 0
+              siacoinInput.unlockconditions.publickeys = ["ed25519:" + utxo.Address]
+              siacoinInput.unlockconditions.signaturesrequired = 1
+              spendTransaction.transaction.siacoininputs.push(siacoinInput)
+              totalAmount += utxo.ScChange
+            }
+            siacoinOutput = {}
+            siacoinOutput.value = amount.toLocaleString('fullwide', {useGrouping:false})
+            siacoinOutput.unlockhash = targetAddress
+            spendTransaction.transaction.siacoinoutputs.push(siacoinOutput)
+            var fee = 100000000000000000000000000
+            spendTransaction.transaction.minerfees = [ fee.toLocaleString('fullwide', {useGrouping:false}) ]
+            changeOutput = {}
+            changeOutput.value = (totalAmount - amount - fee).toLocaleString('fullwide', {useGrouping:false})
+            changeOutput.unlockhash = address
+            spendTransaction.transaction.siacoinoutputs.push(changeOutput)
+            console.log(JSON.stringify(spendTransaction))
+          })
+          .catch(error => {
+            console.error("Error:", error);
+          })
+      }
     </script>
     <script>
 &SCRIPT;
