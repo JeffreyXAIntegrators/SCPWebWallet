@@ -40,7 +40,9 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 Source: "..\release\scp-webwallet-v{#MyAppVersion}-windows-amd64\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\release\scp-webwallet-server-v{#MyAppVersion}-windows-amd64\scp-webwallet.exe.asc"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\release\scp-webwallet-server-v{#MyAppVersion}-windows-amd64\scp-webwallet-server.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\release\scp-webwallet-server-v{#MyAppVersion}-windows-amd64\scp-webwallet-server.exe.asc"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\release\scp-webwallet-v{#MyAppVersion}-windows-amd64\README.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\release\scp-webwallet-v{#MyAppVersion}-windows-amd64\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
