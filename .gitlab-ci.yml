@@ -97,6 +97,11 @@ Build Windows Installer:
   when: manual
   needs:
     - Test Build
+  artifacts:
+    name: "Windows installer"
+    paths:
+      - $CI_PROJECT_DIR/release/webwallet_installer.exe
   before_script: [""]
   script:
+    - export SCPVERSION=$(grep "=" build/version.go | awk -F '"' '{print $2}')
     - iscc "release-scripts/webwallet_installer.iss"
