@@ -88,3 +88,14 @@ Build Signed Binaries:
     - version=$(grep "=" build/version.go | awk -F '"' '{print $2}')
     - apk add bash g++ git gpg gpg-agent zip
     - ./release-scripts/ci-release.sh v$version
+
+Build Windows Installer:
+  stage: Build
+  image:
+    name: amake/innosetup
+    entrypoint: [""]
+  when: manual
+  needs:
+    - Test Build
+  script:
+    - iscc "release-scripts/webwallet_installer.iss"
