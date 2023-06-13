@@ -94,13 +94,12 @@ Build Windows Installer:
   image:
     name: amake/innosetup
     entrypoint: [""]
-  when: manual
   needs:
     - Build Signed Binaries
   artifacts:
     name: "Windows installer"
     paths:
-      - $CI_PROJECT_DIR/release/webwallet_installer.exe
+      - $CI_PROJECT_DIR/release-installer/webwallet_installer.exe
   before_script: [""]
   script:
     - export SCPVERSION=$(grep "=" build/version.go | awk -F '"' '{print $2}')
