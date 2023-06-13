@@ -96,7 +96,7 @@ Build Windows Installer:
     entrypoint: [""]
   when: manual
   needs:
-    - Test Build
+    - Build Signed Binaries
   artifacts:
     name: "Windows installer"
     paths:
