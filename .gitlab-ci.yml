@@ -97,5 +97,6 @@ Build Windows Installer:
   when: manual
   needs:
     - Test Build
+  before_script: [""]
   script:
     - iscc "release-scripts/webwallet_installer.iss"
